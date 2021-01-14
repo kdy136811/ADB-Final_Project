@@ -1,0 +1,52 @@
+{% extends "shared/_layout.html" %}
+{% block title %}Equipments{% endblock %}
+{% block main_content %}
+
+<div class="main">
+    <div class="form-wrapper">
+        <form method="post">
+            <h2>Add new equipments</h2>
+                <input class="form-control" type="text" name="site" placeholder=" Site" >
+                <input class="form-control" type="text" name="longitude" placeholder=" Longitude" >
+                <input class="form-control" type="text" name="latitude" placeholder=" Latitude" >
+                <input class="form-control" type="text" name="altitude" placeholder=" Altitude" >
+                <input class="form-control" type="text" name="time_zone" placeholder=" Time zone" >
+                <input class="form-control" type="text" name="daylight_saving" placeholder=" Daylight saving" >
+                <input class="form-control" type="text" name="water_vapor" placeholder=" Water vapor" >
+                <input class="form-control" type="text" name="light_pollusion" placeholder=" Light pollusion(m/sas)" >
+                <input class="form-control" type="text" name="equipment_id" placeholder=" Equipments id">
+            <div class="actions">
+                <button type="submit" class="bt btn-info btn-sm">Add New Equipments</button>
+            </div>
+        </form>
+        <div class="error-msg">
+                    {% if error %}
+                        <div class="error-msg">{{ error }}</div>
+                    {% endif %}
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for msg in messages %}
+                                <p>{{ msg }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+        <form method="get">
+            <h2 style="color:black">Equipments list</h2>
+            {% for info in user_equipments %}
+            <h2 style="color:black">equipments {{loop.index}}</h2>
+                <input class="form-control" type="text" name="site" placeholder=" Site" value="{{ info.site }}">
+                <input class="form-control" type="text" name="longitude" placeholder=" Longitude" value="{{ info.longitude }}">
+                <input class="form-control" type="text" name="latitude" placeholder=" Latitude" value="{{ info.latitude }}">
+                <input class="form-control" type="text" name="altitude" placeholder=" Altitude" value="{{ info.altiitude }}" >
+                <input class="form-control" type="text" name="time_zone" placeholder=" Time zone" value="{{ info.time_zone }}" >
+                <input class="form-control" type="text" name="daylight_saving" placeholder=" Daylight saving" value="{{ info.daylight_saving }}" >
+                <input class="form-control" type="text" name="water_vapor" placeholder=" Water vapor" value="{{ info.water_vapor }}" >
+                <input class="form-control" type="text" name="light_pollusion" placeholder=" Light pollusion(m/sas)" value="{{ info.light_pollusion }}" >
+            <div class="actions">
+                <button type="submit" class="bt btn-info btn-sm">Update</button>
+            </div>
+            {% endfor%}
+        </form>    
+    </div>
+</div>
+{% endblock %}
