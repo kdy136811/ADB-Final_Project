@@ -1,12 +1,13 @@
 from flask import Flask, render_template, redirect, session, url_for, flash, request
 from data.db_session import db_auth
-from services.accounts_service import create_user, login_user, get_profile, update_profile
+#from services.accounts_service import create_user, login_user, get_profile, update_profile
+from services.accounts_service import *
 import os
 
-app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app = Flask(__name__) #create application
+app.secret_key = os.urandom(24) 
 
-graph = db_auth()
+graph = db_auth() #connect to neo4j
 
 
 @app.route('/')
@@ -104,6 +105,42 @@ def profile_post():
     else:
         return redirect(url_for("login_get"))
 
+@app.route('/accounts/equipments', methods=['GET'])
+def equipments_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        user_equipments = get_equipments(usr)
+        if not user_equipments:
+            flash("Don't have any equipment yet! Please add a equipment first", "error")
+            #user_equipments = create_equipments()
+        return render_template("accounts/equipments.html", user_equipments = user_equipments)
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/equipments', methods=['POST'])
+
+def equipments_post():
+    Site = request.form.get('site').strip()
+    Longitude = request.form.get('longitude').strip()
+    Latitude = request.form.get('latitude').strip()
+    Altitude = request.form.get('altitude').strip()
+    tz = request.form.get('time_zone').strip()
+    daylight = request.form.get('daylight_saving').strip()
+    wv = request.form.get('water_vapor').strip()
+    light_pollusion = request.form.get('light_pollusion').strip()
+    eid = request.form.get('equipment_id').strip()
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        #user_equipments = update_equipments()
+        print(usr)
+        print(eid)
+        user_equipments = create_equipments(usr,eid,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollusion)
+        user_equipments = get_equipments(usr)
+        return render_template("accounts/equipments.html", user_equipments = user_equipments)
+    else:
+        return redirect(url_for("login_get"))
 
 @app.route('/accounts/logout')
 def logout():
