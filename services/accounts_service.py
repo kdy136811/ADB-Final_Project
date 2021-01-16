@@ -16,11 +16,11 @@ def create_user(username: str, name: str, email: str, affiliation: str, title: s
     if find_user(email):
         return None
     user = User()
-    max_id = graph.run(f"MATCH (n:user) RETURN ID(n) order by ID(n) DESC  LIMIT 1").data()
+    max_id = graph.run(f"MATCH (u:user) RETURN u.UID order by u.UID DESC  LIMIT 1").data()
     if len(max_id) == 0:
-        user.UID = '0'
+        user.UID = 0
     else:
-        user.UID = str(max_id[0]['ID(n)']+1)
+        user.UID = max_id[0]['ID(n)']+1
     user.username = username
     user.name = name
     user.email = email
