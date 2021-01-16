@@ -155,7 +155,7 @@ def equipments_post():
     SDSSr = request.form.get('SDSSr').strip()
     SDSSi = request.form.get('SDSSi').strip()
     SDSSz = request.form.get('SDSSz').strip()
-    hid = request.form.get('id').strip() 
+    hid = request.form.get('uhaveid').strip() 
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
@@ -169,11 +169,45 @@ def equipments_post():
             user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollusion)
             #print('add')
         if request.form.get('button') == 'delete':
-            delete_user_equipment(usr,hid)
+            delete_user_equipment(usr,int(hid))
         user_equipments = get_user_equipments(usr)
         return render_template("accounts/equipments.html", user_equipments = user_equipments)
     else:
         return redirect(url_for("login_get"))
+
+@app.route('/projects/target', methods=['GET'])
+def target_get():
+
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        target = get_target()
+        return render_template("projects/target.html", target = target)
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/projects/target', methods=['POST'])
+def target_post():
+    
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        target = get_target()
+        return render_template("projects/target.html", target = target)
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/projects/project', methods=['GET'])
+def project_get():
+
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        projects = get_project(usr)
+        return render_template("projects/project.html", projects = projects)
+    else:
+        return redirect(url_for("login_get"))
+
 
 @app.route('/accounts/logout')
 def logout():

@@ -6,7 +6,7 @@
     <div class="form-wrapper">
         <form method="post">
             <h2>Add new equipments</h2>
-                <input class="form-control" type="hidden" name='id' >
+                <input class="form-control" type="hidden" name='uhaveid' >
                 <input class="form-control" type="text" name="site" placeholder=" Site" >
                 <input class="form-control" type="text" name="longitude" placeholder=" Longitude" >
                 <input class="form-control" type="text" name="latitude" placeholder=" Latitude" >
@@ -54,7 +54,7 @@
             {% if user_equipments %}
              {% for info in user_equipments %}
             <h2 style="color:black">equipments {{loop.index}}</h2>
-                <input class="form-control" type="hidden" name='id' value="{{info.id}}" >
+                <input class="form-control" type="hidden" name='uhaveid' value="{{info.id}}" >
                 <input class="form-control" type="text" name="site" placeholder=" Site" value="{{ info.site }}">
                 <input class="form-control" type="text" name="longitude" placeholder=" Longitude" value="{{ info.longitude }}">
                 <input class="form-control" type="text" name="latitude" placeholder=" Latitude" value="{{ info.latitude }}">

@@ -41,6 +41,37 @@ class Equipments(GraphObject):
     SDSSz =Property()
     owner = RelatedFrom(User,"HAVE_E")
 
+class Target(GraphObject):
+    __primarylabel__="target"
+    __primarykey__="TID"
+    TID = Property()
+    Name = Property()
 
+class Project(GraphObject):
+    __primarylabel__="project"
+    __primarykey__="PID"
+    PID = Property()
+    title = Property()
+    project_type = Property()
+    PI = Property()
+    description = Property()
+    aperture_upper_limit = Property()
+    aperture_lower_limit = Property()
+    FoV_upper_limit = Property()
+    FoV_lower_limit = Property()
+    pixel_scale_upper_limit = Property()
+    pixel_scale_lower_limit = Property()
+    mount_type = Property()
+    camera_type1 = Property()
+    camera_type2 = Property()
+    JohnsonB = Property()
+    JohnsonV = Property()
+    JohnsonR = Property()
+    SDSSu = Property()
+    SDSSg = Property()
+    SDSSr = Property()
+    SDSSi = Property()
+    SDSSz =Property()
+    
 
 
