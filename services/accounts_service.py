@@ -56,30 +56,78 @@ def update_profile(usr: str, name: str, company: str) -> Optional[User]:
     return user_profile
 
 
-def find_user_equipment(usr: str):
+def count_user_equipment(usr: str)->int:
     
-    count = graph.run("MATCH (x:user {email:$usr})-[:have_e]->(:equipments) return count(*)",usr=usr)
-    print(count)
+    count = graph.run("MATCH (x:user {email:$usr})-[:have_e]->(:equipments) return count(*)",usr=usr).evaluate()
     return count
 
-def create_equipments(usr: str,eid: str ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollusion: float):
+def create_user_equipments(usr: str,eid: str ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollusion: float):
+    
 
     query = f"MATCH (x:user) where x.email='{usr}'  MATCH (e:equipments) where e.EID={eid}" \
-    "CREATE (x)-[h:have_e{ site:$Site, longitude:$Longitude, latitude:$Latitude" \
-    ", altitude:$Altitude, time_zone:$tz, daylight_saving:$daylight, water_vapor:$wv,light_pollusion:$light_pollusion}]->(e) return h.site as site, h.longitude as longitude," \
+    "CREATE (x)-[h:have_e{ uhaveid: $uhaveid, site:$Site, longitude:$Longitude, latitude:$Latitude" \
+    ", altitude:$Altitude, time_zone:$tz, daylight_saving:$daylight, water_vapor:$wv,light_pollusion:$light_pollusion}]->(e) return h.uhaveid as id, h.site as site, h.longitude as longitude," \
     "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollusion as light_pollusion"
-    
-    user_equipments = graph.run(query,Site=Site,Longitude=Longitude,Latitude=Latitude,Altitude=Altitude,tz=tz,daylight=daylight,wv=wv,light_pollusion=light_pollusion)
-    print(user_equipments)
+
+    count = graph.run("MATCH (x:user)-[p:have_e]->(:equipments) return count(*)").evaluate()    
+    user_equipments = graph.run(query,Site=Site,Longitude=Longitude,Latitude=Latitude,Altitude=Altitude,tz=tz,daylight=daylight,wv=wv,light_pollusion=light_pollusion, uhaveid = count)
     return user_equipments
 
-def update_equipments()-> Optional[Equipments]:
-    user_equipments = graph.run().data()
+def update_user_equipments(aperture: float,Fov: float,pixel_scale: float,tracking_accurcy: float,lim_magnitude: float,elevation_lim: float,mount_type: str,camera_type1:str,
+                          camera_type2: str,JohnsonB: str,JohnsonR: str,JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz:str,
+                          usr: str ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollusion: float, uhaveid : int):
+
+    print(uhaveid) 
+    query ="MATCH (x:user {email:$usr})-[h:have_e {uhaveid: $uhaveid}]->(e:equipments)" \
+             f"SET h.site='{Site}', h.longitude='{Longitude}', h.latitude='{Latitude}', h.altitude='{Altitude}', h.time_zone='{tz}', h.daylight_saving='{daylight}', h.water_vapor='{wv}'," \
+             f"h.light_pollusion='{light_pollusion}', e.aperture='{aperture}', e.Fov='{Fov}', e.pixel_scale='{pixel_scale}',e.tracking_accurcy='{tracking_accurcy}', e.lim_magnitude='{lim_magnitude}',"\
+             f"e.elevation_lim='{elevation_lim}', e.mount_type='{mount_type}', e.camera_type1='{camera_type1}', e.camera_type2='{camera_type2}', e.JohnsonB='{JohnsonB}', e.JohnsonR='{JohnsonR}', e.JohnsonV='{JohnsonV}', " \
+             f"e.SDSSu='{SDSSu}', e.SDSSg='{SDSSg}', e.SDSSr='{SDSSr}', e.SDSSi='{SDSSi}', e.SDSSz='{SDSSz}'"  
+    user_equipments = graph.run(query,usr = usr, uhaveid = uhaveid)
     return user_equipments
 
-def get_equipments(usr: str)-> Optional[Equipments]:
-    if  find_user_equipment(usr) == 0:
+def get_user_equipments(usr: str):
+    # return the user's equipment and that equipment's detail
+    if  count_user_equipment(usr) == 0:
         return None
-    user_equipments = graph.run("MATCH (x:user {email:$usr})-[h:have_e]->(:equipments) return h.site as site, h.longitude as longitude," \
-        "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollusion as light_pollusion",usr=usr)
+    user_equipments = graph.run("MATCH (x:user {email:$usr})-[h:have_e]->(e:equipments) return e.EID as eid,h.site as site, h.longitude as longitude," \
+        "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollusion as light_pollusion," \
+        "e.aperture as aperture, e.Fov as Fov, e.pixel_scale as pixel_scale,e.tracking_accurcy as  tracking_accurcy, e.lim_magnitude as lim_magnitude, e.elevation_lim as elevation_lim," \
+        "e.mount_type as mount_type, e.camera_type1 as camera_type1, e.camera_type2 as camera_type2, e.JohnsonB as JohnsonB, e.JohnsonR as JohnsonR, e.JohnsonV as JohnsonV, e.SDSSu as SDSSu," \
+        "e.SDSSg as SDSSg, e.SDSSr as SDSSr, e.SDSSi as SDSSi,e.SDSSz as SDSSz, h.uhaveid as id" ,usr=usr).data()
     return user_equipments
+
+def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accurcy:float,lim_magnitude:float,elevation_lim:float,mount_type:str,camera_type1:str,camera_type2:str,JohsonB:str,JohsonR:str,JohsonV:str,SDSSu:str,SDSSg:str,SDSSr:str,SDSSi:str,SDSSz:str)->Optional[Equipments]:
+    # create an equipment
+    count = graph.run("MATCH (e:equipments) return count(*) as count").evaluate()
+    equipment = Equipments()
+    equipment.EID = count
+    equipment.aperture = aperture
+    equipment.Fov = Fov
+    equipment.pixel_scale =pixel_scale
+    equipment.tracking_accurcy = tracking_accurcy
+    equipment.lim_magnitude =lim_magnitude
+    equipment.elevation_lim = elevation_lim
+    equipment.mount_type = mount_type
+    equipment.camera_type1 = camera_type2
+    equipment.camera_type2 = camera_type1
+    equipment.JohnsonB = JohsonB
+    equipment.JohnsonR = JohsonR
+    equipment.JohnsonV = JohsonV
+    equipment.SDSSu = SDSSu
+    equipment.SDSSg = SDSSg
+    equipment.SDSSr = SDSSr
+    equipment.SDSSi = SDSSi
+    equipment.SDSSz = SDSSz
+    graph.create(equipment)
+    return equipment
+
+'''def get_equipments(usr:str)->Optional[Equipments]:
+    
+    equipment = graph.run("MATCH (x:usrr {email:$usr})-[h:have_e]->(e:equipment) return e.EID as eid, e.aperture as aperture, e.Fov as Fov, e.pixel_scale as pixel_scale," \
+                           "e.tracking_accurcy as  tracking_accurcy, e.lim_magnitude as lim_magnotude, e.elevation_lim as elevation_lim, e.mount_type as mount_type, e.camera_type1 as camer_type1," \
+                           "e.camera_type2 as camera_type2, e.JohnsonB as JohnsonB, e.JohnsonR as JohnsonR, e.JohnsonV as JohnsonV, e.SDSSu as SDSSu, e.SDSSg as SDSSg, e.SDSSr as SDSSr, e.SDSSi as SDSSi," \
+                           "e.SDSSz as SDSSz", usr = usr).data()
+    print(equipment)
+    return equipment  
+'''                      

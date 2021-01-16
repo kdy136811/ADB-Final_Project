@@ -110,10 +110,11 @@ def equipments_get():
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
-        user_equipments = get_equipments(usr)
-        if not user_equipments:
+        count = count_user_equipment(usr)
+        if count == 0:
             flash("Don't have any equipment yet! Please add a equipment first", "error")
-            #user_equipments = create_equipments()
+            return render_template("accounts/equipments.html", user_equipments = None)
+        user_equipments = get_user_equipments(usr)
         return render_template("accounts/equipments.html", user_equipments = user_equipments)
     else:
         return redirect(url_for("login_get"))
@@ -121,6 +122,7 @@ def equipments_get():
 @app.route('/accounts/equipments', methods=['POST'])
 
 def equipments_post():
+    # user equipment parameter
     Site = request.form.get('site').strip()
     Longitude = request.form.get('longitude').strip()
     Latitude = request.form.get('latitude').strip()
@@ -129,15 +131,38 @@ def equipments_post():
     daylight = request.form.get('daylight_saving').strip()
     wv = request.form.get('water_vapor').strip()
     light_pollusion = request.form.get('light_pollusion').strip()
-    eid = request.form.get('equipment_id').strip()
+    
+    #equipments parameter
+    aperture = request.form.get('aperture').strip()
+    Fov = request.form.get('fov').strip()
+    pixel_scale = request.form.get('pixel').strip()
+    tracking_accurcy = request.form.get('accurcy').strip()
+    lim_magnitude = request.form.get('mag').strip()
+    elevation_lim = request.form.get('deg').strip()
+    mount_type = request.form.get('mount_type').strip()
+    camera_type1 = request.form.get('camera_type1').strip()
+    camera_type2 = request.form.get('camera_type2').strip()
+    JohnsonB = request.form.get('JohnsonB').strip()
+    JohnsonV = request.form.get('JohnsonV').strip()
+    JohnsonR = request.form.get('JohnsonR').strip()
+    SDSSu = request.form.get('SDSSu').strip()
+    SDSSg = request.form.get('SDSSg').strip()
+    SDSSr = request.form.get('SDSSr').strip()
+    SDSSi = request.form.get('SDSSi').strip()
+    SDSSz = request.form.get('SDSSz').strip()
+    hid = request.form.get('id').strip() 
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
-        #user_equipments = update_equipments()
-        print(usr)
-        print(eid)
-        user_equipments = create_equipments(usr,eid,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollusion)
-        user_equipments = get_equipments(usr)
+        if request.form.get('button') == 'update':
+            user_equipments = update_user_equipments(aperture,Fov,pixel_scale,tracking_accurcy,lim_magnitude,elevation_lim,mount_type,camera_type1,
+            camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz,
+            usr,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollusion,int(hid))
+        if request.form.get('button') == 'add':
+            equipments = create_equipments(aperture,Fov,pixel_scale,tracking_accurcy,lim_magnitude,elevation_lim,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
+            user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollusion)
+            #print('add')
+        user_equipments = get_user_equipments(usr)
         return render_template("accounts/equipments.html", user_equipments = user_equipments)
     else:
         return redirect(url_for("login_get"))
