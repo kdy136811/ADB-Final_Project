@@ -23,28 +23,31 @@ def register_get():
 @app.route('/accounts/register', methods=['POST'])
 def register_post():
     # Get the form data from register.html
+    username = request.form.get('username').strip()
     name = request.form.get('name')
     email = request.form.get('email').lower().strip()
-    company = request.form.get('company').strip()
+    affiliation = request.form.get('affiliation').strip()
+    title = request.form.get('title').strip()
+    country = request.form.get('country').strip()
     password = request.form.get('password').strip()
     confirm = request.form.get('confirm').strip()
 
     # Check for blank fields in the registration form
-    if not name or not email or not company or not password or not confirm:
+    if not username or not name or not email or not affiliation or not title  or not country or not password or not confirm:
         flash("Please populate all the registration fields", "error")
-        return render_template("accounts/register.html", name=name, email=email, company=company, password=password, confirm=confirm)
+        return render_template("accounts/register.html", username=username, name=name, email=email, affiliation=affiliation, title=title, country=country, password=password, confirm=confirm)
 
     # Check if password and confirm match
     if password != confirm:
         flash("Passwords do not match")
-        return render_template("accounts/register.html", name=name, email=email, company=company)
+        return render_template("accounts/register.html", username=username, name=name, email=email, affiliation=affiliation, title=title, country=country)
 
     # Create the user
-    user = create_user(name, email, company, password)
+    user = create_user(username, name, email, affiliation, title, country, password)
     # Verify another user with the same email does not exist
     if not user:
         flash("A user with that email already exists.")
-        return render_template("accounts/register.html", name=name, email=email, company=company)
+        return render_template("accounts/register.html", username=username, name=name, email=email, affiliation=affiliation, title=title, country=country)
 
     return redirect(url_for("profile_get"))
 
@@ -93,13 +96,16 @@ def profile_get():
 @app.route('/accounts/profile', methods=['POST'])
 def profile_post():
     # Get the data from index.html
+    username = request.form.get('username').strip()
     name = request.form.get('name')
-    company = request.form.get('company').strip()
+    affiliation = request.form.get('affiliation').strip()
+    title = request.form.get('title').strip()
+    country = request.form.get('country').strip()
     # Make sure the user has an active session.  If not, redirect to the login page.
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
-        user_profile = update_profile(usr, name, company)
+        user_profile = update_profile(usr, username, name, affiliation, title, country)
         user_profile = get_profile(usr)
         return render_template("accounts/index.html", user_profile=user_profile)
     else:
@@ -120,7 +126,6 @@ def equipments_get():
         return redirect(url_for("login_get"))
 
 @app.route('/accounts/equipments', methods=['POST'])
-
 def equipments_post():
     # user equipment parameter
     Site = request.form.get('site').strip()

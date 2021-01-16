@@ -7,9 +7,12 @@
         <form method="post">
             <h2>Profile</h2>
             {% for info in user_profile %}
+                <input class="form-control" type="text" name="username" placeholder=" Username" value="{{ info.username }}">
                 <input class="form-control" type="text" name="name" placeholder=" Full Name" value="{{ info.name }}">
                 <input class="form-control" type="text" name="email" placeholder=" email" value="{{ info.email }}">
-                <input class="form-control" type="text" name="company" placeholder=" Company Name" value="{{ info.company }}">
+                <input class="form-control" type="text" name="affiliation" placeholder=" Affiliation" value="{{ info.affiliation }}">
+                <input class="form-control" type="text" name="title" placeholder=" Title" value="{{ info.title }}">
+                <input class="form-control" type="text" name="country" placeholder=" Country" value="{{ info.country }}">
             {% endfor %}
             <div class="actions">
                 <button type="submit" class="bt btn-info btn-sm">Save</button>
