@@ -162,6 +162,8 @@ def equipments_post():
             equipments = create_equipments(aperture,Fov,pixel_scale,tracking_accurcy,lim_magnitude,elevation_lim,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
             user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollusion)
             #print('add')
+        if request.form.get('button') == 'delete':
+            delete_user_equipment(usr,int(hid))
         user_equipments = get_user_equipments(usr)
         return render_template("accounts/equipments.html", user_equipments = user_equipments)
     else:

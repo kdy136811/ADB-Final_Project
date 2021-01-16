@@ -97,6 +97,11 @@ def get_user_equipments(usr: str):
         "e.SDSSg as SDSSg, e.SDSSr as SDSSr, e.SDSSi as SDSSi,e.SDSSz as SDSSz, h.uhaveid as id" ,usr=usr).data()
     return user_equipments
 
+def delete_user_equipment(usr: str,uhaveid: int):
+    #delete user's equipment
+    graph.run("MATCH (x:user {email:$usr})-[h:have_e {uhaveid: $uhaveid}]->(e:equipments) DELETE h,e", usr=usr, uhaveid=uhaveid)
+
+
 def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accurcy:float,lim_magnitude:float,elevation_lim:float,mount_type:str,camera_type1:str,camera_type2:str,JohsonB:str,JohsonR:str,JohsonV:str,SDSSu:str,SDSSg:str,SDSSr:str,SDSSi:str,SDSSz:str)->Optional[Equipments]:
     # create an equipment
     count = graph.run("MATCH (e:equipments) return count(*) as count").evaluate()
@@ -121,6 +126,8 @@ def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accurc
     equipment.SDSSz = SDSSz
     graph.create(equipment)
     return equipment
+
+
 
 '''def get_equipments(usr:str)->Optional[Equipments]:
     
