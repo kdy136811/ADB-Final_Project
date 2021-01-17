@@ -15,8 +15,8 @@ class User(GraphObject):
     hashed_password = Property()
     created_on = Property()
     last_logon = Property()
-    have_e = RelatedTo("Equipments","OWNER")
-    
+    UhaveE = RelatedTo("Equipments","OWNER")
+    Manage = RelatedTo("Projects","OWN")   
 
 class Equipments(GraphObject):
     __primarylabel__ = "equipments"
@@ -39,17 +39,17 @@ class Equipments(GraphObject):
     SDSSr = Property()
     SDSSi = Property()
     SDSSz =Property()
-    owner = RelatedFrom(User,"HAVE_E")
+    owner = RelatedFrom(User,"UHAVEE")
 
 class Target(GraphObject):
-    __primarylabel__="target"
-    __primarykey__="TID"
+    __primarylabel__ ="target"
+    __primarykey__ ="TID"
     TID = Property()
     Name = Property()
 
 class Project(GraphObject):
-    __primarylabel__="project"
-    __primarykey__="PID"
+    __primarylabel__ = "project"
+    __primarykey__ = "PID"
     PID = Property()
     title = Property()
     project_type = Property()
@@ -72,6 +72,6 @@ class Project(GraphObject):
     SDSSr = Property()
     SDSSi = Property()
     SDSSz =Property()
-    
+    own = RelatedFrom(User,"MANAGE")
 
 
