@@ -71,13 +71,13 @@ def count_user_equipment(usr: str)->int:
     count = graph.run("MATCH (x:user {email:$usr})-[:UhaveE]->(:equipments) return count(*)",usr=usr).evaluate()
     return count
 
-def create_user_equipments(usr: str,eid: int ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollusion: float):
+def create_user_equipments(usr: str,eid: int ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollution: float):
     
 
     query ="MATCH (x:user {email:$usr})  MATCH (e:equipments {EID:$EID})" \
     "CREATE (x)-[h:UhaveE{ uhaveid: $uhaveid, site:$Site, longitude:$Longitude, latitude:$Latitude" \
-    ", altitude:$Altitude, time_zone:$tz, daylight_saving:$daylight, water_vapor:$wv,light_pollusion:$light_pollusion}]->(e) return h.uhaveid as id, h.site as site, h.longitude as longitude," \
-    "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollusion as light_pollusion"
+    ", altitude:$Altitude, time_zone:$tz, daylight_saving:$daylight, water_vapor:$wv,light_pollution:$light_pollution}]->(e) return h.uhaveid as id, h.site as site, h.longitude as longitude," \
+    "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollution as light_pollution"
 
     count = graph.run("MATCH (x:user)-[p:UhaveE]->(:equipments) return p.uhaveid order by p.uhaveid DESC limit 1").data()
     if len(count) == 0:
@@ -85,17 +85,17 @@ def create_user_equipments(usr: str,eid: int ,Site: str,Longitude:float,Latitude
     else:
         uhaveid = count[0]['p.uhaveid']+1
     print(uhaveid)
-    user_equipments = graph.run(query,usr=usr, EID = eid, Site=Site,Longitude=Longitude,Latitude=Latitude,Altitude=Altitude,tz=tz,daylight=daylight,wv=wv,light_pollusion=light_pollusion, uhaveid = uhaveid)
+    user_equipments = graph.run(query,usr=usr, EID = eid, Site=Site,Longitude=Longitude,Latitude=Latitude,Altitude=Altitude,tz=tz,daylight=daylight,wv=wv,light_pollution=light_pollution, uhaveid = uhaveid)
     return user_equipments
 
 def update_user_equipments(aperture: float,Fov: float,pixel_scale: float,tracking_accurcy: float,lim_magnitude: float,elevation_lim: float,mount_type: str,camera_type1:str,
                           camera_type2: str,JohnsonB: str,JohnsonR: str,JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz:str,
-                          usr: str ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollusion: float, uhaveid : int):
+                          usr: str ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollution: float, uhaveid : int):
 
     print(uhaveid) 
     query ="MATCH (x:user {email:$usr})-[h:UhaveE {uhaveid: $uhaveid}]->(e:equipments)" \
              f"SET h.site='{Site}', h.longitude='{Longitude}', h.latitude='{Latitude}', h.altitude='{Altitude}', h.time_zone='{tz}', h.daylight_saving='{daylight}', h.water_vapor='{wv}'," \
-             f"h.light_pollusion='{light_pollusion}', e.aperture='{aperture}', e.Fov='{Fov}', e.pixel_scale='{pixel_scale}',e.tracking_accurcy='{tracking_accurcy}', e.lim_magnitude='{lim_magnitude}',"\
+             f"h.light_pollution='{light_pollution}', e.aperture='{aperture}', e.Fov='{Fov}', e.pixel_scale='{pixel_scale}',e.tracking_accurcy='{tracking_accurcy}', e.lim_magnitude='{lim_magnitude}',"\
              f"e.elevation_lim='{elevation_lim}', e.mount_type='{mount_type}', e.camera_type1='{camera_type1}', e.camera_type2='{camera_type2}', e.JohnsonB='{JohnsonB}', e.JohnsonR='{JohnsonR}', e.JohnsonV='{JohnsonV}', " \
              f"e.SDSSu='{SDSSu}', e.SDSSg='{SDSSg}', e.SDSSr='{SDSSr}', e.SDSSi='{SDSSi}', e.SDSSz='{SDSSz}'"  
     user_equipments = graph.run(query,usr = usr, uhaveid = uhaveid)
@@ -106,7 +106,7 @@ def get_user_equipments(usr: str):
     if  count_user_equipment(usr) == 0:
         return None
     user_equipments = graph.run("MATCH (x:user {email:$usr})-[h:UhaveE]->(e:equipments) return e.EID as eid,h.site as site, h.longitude as longitude," \
-        "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollusion as light_pollusion," \
+        "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollution as light_pollution," \
         "e.aperture as aperture, e.Fov as Fov, e.pixel_scale as pixel_scale,e.tracking_accurcy as  tracking_accurcy, e.lim_magnitude as lim_magnitude, e.elevation_lim as elevation_lim," \
         "e.mount_type as mount_type, e.camera_type1 as camera_type1, e.camera_type2 as camera_type2, e.JohnsonB as JohnsonB, e.JohnsonR as JohnsonR, e.JohnsonV as JohnsonV, e.SDSSu as SDSSu," \
         "e.SDSSg as SDSSg, e.SDSSr as SDSSr, e.SDSSi as SDSSi,e.SDSSz as SDSSz, h.uhaveid as id" ,usr=usr).data()
@@ -165,11 +165,14 @@ def get_target():
     target = graph.run(query)
     return target
 
-def get_project(usr: str):
+def get_project(usr: str)->Optional[Project]:
     # this function will return project which user can join
-    query = "MATCH(t:project) return t.title as title, t.project_type as project_type, t.PI as PI, t.description as description, t.aperture_upper_limit as aperture_upper_limit, t.aperture_lower_limit as aperture_lower_limit," \
-            "t.FoV_upper_limit as FoV_upper_limit, t.FoV_lower_limit as FoV_lower_limit, t.pixel_scale_upper_limit as pixel_scale_upper_limit, t.pixel_scale_lower_limit as pixel_scale_lower_limit," \
-            "t.mount_type as mount_type, t.camera_type1 as camera_type1, t.camera_type2 as camera_type2, t.JohnsonB as JohnsonB, t.JohnsonR as JohnsonR, t.JohnsonV as JohnsonV, t.SDSSu as SDSSu," \
-            "t.SDSSg as SDSSg, t.SDSSr as SDSSr, t.SDSSi as SDSSi, t.SDSSz as SDSSz, t.PID as PID ORDER BY t.PID limit 100"
-    project = graph.run(query)
+
+    query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
+        "and n.JohnsonB=e.JohnsonB and n.JohnsonV=e.JohnsonV and n.JohnsonR=e.JohnsonR  and n.SDSSu=e.SDSSu  and n.SDSSg=e.SDSSg and n.SDSSr=e.SDSSr and n.SDSSi=e.SDSSi and n.SDSSz=e.SDSSz" \
+        " return n.title as title, n.project_type as project_type, n.PI as PI, n.description as description, n.aperture_upper_limit as aperture_upper_limit, n.aperture_lower_limit as aperture_lower_limit," \
+        "n.FoV_upper_limit as FoV_upper_limit, n.FoV_lower_limit as FoV_lower_limit, n.pixel_scale_upper_limit as pixel_scale_upper_limit, n.pixel_scale_lower_limit as pixel_scale_lower_limit," \
+        "n.mount_type as mount_type, n.camera_type1 as camera_type1, n.camera_type2 as camera_type2, n.JohnsonB as JohnsonB, n.JohnsonR as JohnsonR, n.JohnsonV as JohnsonV, n.SDSSu as SDSSu," \
+        "n.SDSSg as SDSSg, n.SDSSr as SDSSr, n.SDSSi as SDSSi, n.SDSSz as SDSSz, n.PID as PID ORDER BY n.PID"
+    project = graph.run(query, usr = usr)
     return project

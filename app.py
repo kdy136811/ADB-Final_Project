@@ -135,7 +135,7 @@ def equipments_post():
     tz = request.form.get('time_zone').strip()
     daylight = request.form.get('daylight_saving').strip()
     wv = request.form.get('water_vapor').strip()
-    light_pollusion = request.form.get('light_pollusion').strip()
+    light_pollution = request.form.get('light_pollution').strip()
     
     #equipments parameter
     aperture = request.form.get('aperture').strip()
@@ -160,13 +160,14 @@ def equipments_post():
         usr = session["usr"]
         session["usr"] = usr
         if request.form.get('button') == 'update':
+            print(hid)
             user_equipments = update_user_equipments(aperture,Fov,pixel_scale,tracking_accurcy,lim_magnitude,elevation_lim,mount_type,camera_type1,
             camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz,
-            usr,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollusion,hid)
+            usr,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution,int(hid))
         if request.form.get('button') == 'add':
             equipments = create_equipments(aperture,Fov,pixel_scale,tracking_accurcy,lim_magnitude,elevation_lim,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
             print(equipments.EID)
-            user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollusion)
+            user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution)
             #print('add')
         if request.form.get('button') == 'delete':
             delete_user_equipment(usr,int(hid))
