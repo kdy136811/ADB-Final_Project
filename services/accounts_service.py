@@ -88,7 +88,6 @@ def create_user_equipments(usr: str,eid: int ,Site: str,Longitude:float,Latitude
     user_equipments = graph.run(query,usr=usr, EID = eid, Site=Site,Longitude=Longitude,Latitude=Latitude,Altitude=Altitude,tz=tz,daylight=daylight,wv=wv,light_pollution=light_pollution, uhaveid = uhaveid)
     return user_equipments
 
-<<<<<<< HEAD
 def update_user_equipments(aperture: float,Fov: float,pixel_scale: float,tracking_accuracy: float,lim_magnitude: float,elevation_lim: float,mount_type: str,camera_type1:str,
                           camera_type2: str,JohnsonB: str,JohnsonR: str,JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz:str,
                           usr: str ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollution: float, uhaveid : int):
@@ -96,23 +95,10 @@ def update_user_equipments(aperture: float,Fov: float,pixel_scale: float,trackin
     print(uhaveid) 
     query ="MATCH (x:user {email:$usr})-[h:UhaveE {uhaveid: $uhaveid}]->(e:equipments)" \
              f"SET h.site='{Site}', h.longitude='{Longitude}', h.latitude='{Latitude}', h.altitude='{Altitude}', h.time_zone='{tz}', h.daylight_saving='{daylight}', h.water_vapor='{wv}'," \
-             f"h.light_pollution='{light_pollution}', e.aperture='{aperture}', e.Fov='{Fov}', e.pixel_scale='{pixel_scale}',e.tracking_accuracy='{tracking_accurcy}', e.lim_magnitude='{lim_magnitude}',"\
+             f"h.light_pollution='{light_pollution}', e.aperture='{aperture}', e.Fov='{Fov}', e.pixel_scale='{pixel_scale}',e.tracking_accuracy='{tracking_accuracy}', e.lim_magnitude='{lim_magnitude}',"\
              f"e.elevation_lim='{elevation_lim}', e.mount_type='{mount_type}', e.camera_type1='{camera_type1}', e.camera_type2='{camera_type2}', e.JohnsonB='{JohnsonB}', e.JohnsonR='{JohnsonR}', e.JohnsonV='{JohnsonV}', " \
              f"e.SDSSu='{SDSSu}', e.SDSSg='{SDSSg}', e.SDSSr='{SDSSr}', e.SDSSi='{SDSSi}', e.SDSSz='{SDSSz}'"  
     user_equipments = graph.run(query,usr = usr, uhaveid = uhaveid)
-=======
-def update_user_equipments(aperture: float, Fov: float, pixel_scale: float, tracking_accurcy: float, lim_magnitude: float, elevation_lim: float, mount_type: str, camera_type1:str,
-                          camera_type2: str, JohnsonB: str, JohnsonR: str, JohnsonV: str, SDSSu: str, SDSSg: str, SDSSr: str, SDSSi: str, SDSSz:str,
-                          usr: str , Site: str, Longitude:float, Latitude:float, Altitude:float, tz:str, daylight:bool, wv: float, light_pollusion: float, uhaveid: int):
-
-    print(uhaveid) 
-    query ="MATCH (x:user {email:$usr})-[h:UhaveE {uhaveid: $uhaveid}]->(e:equipments)" \
-            f"SET h.site='{Site}', h.longitude='{Longitude}', h.latitude='{Latitude}', h.altitude='{Altitude}', h.time_zone='{tz}', h.daylight_saving='{daylight}', h.water_vapor='{wv}'," \
-            f"h.light_pollusion='{light_pollusion}', e.aperture='{aperture}', e.Fov='{Fov}', e.pixel_scale='{pixel_scale}',e.tracking_accurcy='{tracking_accurcy}', e.lim_magnitude='{lim_magnitude}',"\
-            f"e.elevation_lim='{elevation_lim}', e.mount_type='{mount_type}', e.camera_type1='{camera_type1}', e.camera_type2='{camera_type2}', e.JohnsonB='{JohnsonB}', e.JohnsonR='{JohnsonR}', e.JohnsonV='{JohnsonV}', " \
-            f"e.SDSSu='{SDSSu}', e.SDSSg='{SDSSg}', e.SDSSr='{SDSSr}', e.SDSSi='{SDSSi}', e.SDSSz='{SDSSz}'"  
-    user_equipments = graph.run(query, usr=usr, uhaveid=uhaveid)
->>>>>>> d9f734957340f64ced4c7eba1684dcbd5dc786f5
     return user_equipments
 
 def get_user_equipments(usr: str):
@@ -165,7 +151,7 @@ def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accura
 '''def get_equipments(usr:str)->Optional[Equipments]:
     
     equipment = graph.run("MATCH (x:usrr {email:$usr})-[h:have_e]->(e:equipment) return e.EID as eid, e.aperture as aperture, e.Fov as Fov, e.pixel_scale as pixel_scale," \
-                           "e.tracking_accurcy as  tracking_accurcy, e.lim_magnitude as lim_magnotude, e.elevation_lim as elevation_lim, e.mount_type as mount_type, e.camera_type1 as camer_type1," \
+                           "e.tracking_accuracy as  tracking_accuracy, e.lim_magnitude as lim_magnotude, e.elevation_lim as elevation_lim, e.mount_type as mount_type, e.camera_type1 as camer_type1," \
                            "e.camera_type2 as camera_type2, e.JohnsonB as JohnsonB, e.JohnsonR as JohnsonR, e.JohnsonV as JohnsonV, e.SDSSu as SDSSu, e.SDSSg as SDSSg, e.SDSSr as SDSSr, e.SDSSi as SDSSi," \
                            "e.SDSSz as SDSSz", usr = usr).data()
     print(equipment)

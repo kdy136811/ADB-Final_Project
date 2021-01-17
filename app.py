@@ -141,7 +141,7 @@ def equipments_post():
     aperture = request.form.get('aperture').strip()
     Fov = request.form.get('fov').strip()
     pixel_scale = request.form.get('pixel').strip()
-    tracking_accuracy = request.form.get('accurcay').strip()
+    tracking_accuracy = request.form.get('accuracy').strip()
     lim_magnitude = request.form.get('mag').strip()
     elevation_lim = request.form.get('deg').strip()
     mount_type = request.form.get('mount_type').strip()
