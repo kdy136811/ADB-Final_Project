@@ -141,7 +141,7 @@ def equipments_post():
     aperture = request.form.get('aperture').strip()
     Fov = request.form.get('fov').strip()
     pixel_scale = request.form.get('pixel').strip()
-    tracking_accurcy = request.form.get('accurcy').strip()
+    tracking_accuracy = request.form.get('accurcay').strip()
     lim_magnitude = request.form.get('mag').strip()
     elevation_lim = request.form.get('deg').strip()
     mount_type = request.form.get('mount_type').strip()
@@ -161,11 +161,11 @@ def equipments_post():
         session["usr"] = usr
         if request.form.get('button') == 'update':
             print(hid)
-            user_equipments = update_user_equipments(aperture,Fov,pixel_scale,tracking_accurcy,lim_magnitude,elevation_lim,mount_type,camera_type1,
+            user_equipments = update_user_equipments(aperture,Fov,pixel_scale,tracking_accuracy,lim_magnitude,elevation_lim,mount_type,camera_type1,
             camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz,
             usr,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution,int(hid))
         if request.form.get('button') == 'add':
-            equipments = create_equipments(aperture,Fov,pixel_scale,tracking_accurcy,lim_magnitude,elevation_lim,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
+            equipments = create_equipments(aperture,Fov,pixel_scale,tracking_accuracy,lim_magnitude,elevation_lim,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
             print(equipments.EID)
             user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution)
             #print('add')

@@ -25,7 +25,7 @@ class Equipments(GraphObject):
     aperture = Property()
     Fov = Property()
     pixel_scale = Property()
-    tracking_accurcy = Property()
+    tracking_accurcay = Property()
     lim_magnitude = Property()
     elevation_lim = Property()
     mount_type = Property()
