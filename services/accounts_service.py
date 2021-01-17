@@ -16,11 +16,11 @@ def create_user(username: str, name: str, email: str, affiliation: str, title: s
     if find_user(email):
         return None
     user = User()
-    max_id = graph.run(f"MATCH (n:user) RETURN ID(n) order by ID(n) DESC  LIMIT 1").data()
+    max_id = graph.run(f"MATCH (u:user) RETURN u.UID order by u.UID DESC LIMIT 1").data()
     if len(max_id) == 0:
-        user.UID = '0'
+        user.UID = 0
     else:
-        user.UID = str(max_id[0]['ID(n)']+1)
+        user.UID = max_id[0]['u.UID']+1
     user.username = username
     user.name = name
     user.email = email
@@ -88,6 +88,7 @@ def create_user_equipments(usr: str,eid: int ,Site: str,Longitude:float,Latitude
     user_equipments = graph.run(query,usr=usr, EID = eid, Site=Site,Longitude=Longitude,Latitude=Latitude,Altitude=Altitude,tz=tz,daylight=daylight,wv=wv,light_pollution=light_pollution, uhaveid = uhaveid)
     return user_equipments
 
+<<<<<<< HEAD
 def update_user_equipments(aperture: float,Fov: float,pixel_scale: float,tracking_accuracy: float,lim_magnitude: float,elevation_lim: float,mount_type: str,camera_type1:str,
                           camera_type2: str,JohnsonB: str,JohnsonR: str,JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz:str,
                           usr: str ,Site: str,Longitude:float,Latitude:float,Altitude:float,tz:str,daylight:bool,wv: float,light_pollution: float, uhaveid : int):
@@ -99,6 +100,19 @@ def update_user_equipments(aperture: float,Fov: float,pixel_scale: float,trackin
              f"e.elevation_lim='{elevation_lim}', e.mount_type='{mount_type}', e.camera_type1='{camera_type1}', e.camera_type2='{camera_type2}', e.JohnsonB='{JohnsonB}', e.JohnsonR='{JohnsonR}', e.JohnsonV='{JohnsonV}', " \
              f"e.SDSSu='{SDSSu}', e.SDSSg='{SDSSg}', e.SDSSr='{SDSSr}', e.SDSSi='{SDSSi}', e.SDSSz='{SDSSz}'"  
     user_equipments = graph.run(query,usr = usr, uhaveid = uhaveid)
+=======
+def update_user_equipments(aperture: float, Fov: float, pixel_scale: float, tracking_accurcy: float, lim_magnitude: float, elevation_lim: float, mount_type: str, camera_type1:str,
+                          camera_type2: str, JohnsonB: str, JohnsonR: str, JohnsonV: str, SDSSu: str, SDSSg: str, SDSSr: str, SDSSi: str, SDSSz:str,
+                          usr: str , Site: str, Longitude:float, Latitude:float, Altitude:float, tz:str, daylight:bool, wv: float, light_pollusion: float, uhaveid: int):
+
+    print(uhaveid) 
+    query ="MATCH (x:user {email:$usr})-[h:UhaveE {uhaveid: $uhaveid}]->(e:equipments)" \
+            f"SET h.site='{Site}', h.longitude='{Longitude}', h.latitude='{Latitude}', h.altitude='{Altitude}', h.time_zone='{tz}', h.daylight_saving='{daylight}', h.water_vapor='{wv}'," \
+            f"h.light_pollusion='{light_pollusion}', e.aperture='{aperture}', e.Fov='{Fov}', e.pixel_scale='{pixel_scale}',e.tracking_accurcy='{tracking_accurcy}', e.lim_magnitude='{lim_magnitude}',"\
+            f"e.elevation_lim='{elevation_lim}', e.mount_type='{mount_type}', e.camera_type1='{camera_type1}', e.camera_type2='{camera_type2}', e.JohnsonB='{JohnsonB}', e.JohnsonR='{JohnsonR}', e.JohnsonV='{JohnsonV}', " \
+            f"e.SDSSu='{SDSSu}', e.SDSSg='{SDSSg}', e.SDSSr='{SDSSr}', e.SDSSi='{SDSSi}', e.SDSSz='{SDSSz}'"  
+    user_equipments = graph.run(query, usr=usr, uhaveid=uhaveid)
+>>>>>>> d9f734957340f64ced4c7eba1684dcbd5dc786f5
     return user_equipments
 
 def get_user_equipments(usr: str):
