@@ -3,6 +3,7 @@ from typing import Optional
 from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 from services.classes import User, Target, Equipments, Project
 import astro.declination_limit_of_location as declination
+import astro.astroplan_calculations as schedule
 
 graph = db_auth()
 
@@ -432,3 +433,48 @@ def fliter__project_target_(usr: str, PID: int):
             target.append((project_target[j]['TID'], project_target[j]['name'])) 
     print(target)
     return target
+
+
+def get_observable_time(uhaveid, tid_list):
+    # get current time for further calculation
+    current_time = datetime.now()
+    current_time_sec = str(current_time).split('.')[0]
+    
+    # set uhaveid for testing
+    uhaveid = 888
+    
+    # get information from uhavee and equipment table
+    query_relation = "MATCH (x:user)-[h:UhaveE{uhaveid:$uhaveid}]->(e:equipments) return h.longitude as longitude, h.latitude as latitude, h.altitude as altitude, e.elevation_lim as elevation_lim"
+    eq_info = graph.run(query_relation, uhaveid=uhaveid).data()
+
+    longitude = float(eq_info[0]['longitude'])
+    latitude = float(eq_info[0]['latitude'])
+    altitude = float(eq_info[0]['altitude'])
+    elevation_lim = float(eq_info[0]['elevation_lim'])
+
+    # get target information and run the ta's schedule function
+    format = '%Y-%m-%d %H:%M:%S'
+    tid_list = [856, 266, 377, 488, 5, 100]
+    for i in range(len(tid_list)):
+        query_target = "match (t:target) where t.TID=$tid return t.TID as TID, t.longitude as ra, t.latitude as dec"
+        tar_info = graph.run(query_target, tid=tid_list[i]).data()
+
+        tid = int(tar_info[0]['TID'])
+        ra = float(tar_info[0]['ra'])
+        dec = float(tar_info[0]['dec'])
+
+        t_start, t_end = schedule.run(uhaveid, longitude, latitude, altitude, elevation_lim, tid, ra, dec, current_time)
+        # print('start observation: %s \nend observation %s' % (t_start, t_end))
+
+        if str(t_start) != 'nan' and str(t_end)  != 'nan':
+            t1 = str(t_start).split('.')[0].replace("T", " ")
+            t2 = str(t_end).split('.')[0].replace("T", " ")
+
+            time_left = datetime.strptime(t1, format) - datetime.strptime(current_time_sec, format)
+            time_last = datetime.strptime(t2, format) - datetime.strptime(t1, format)
+            
+            # do something to time_left and time_last
+            
+        else:
+            # return something else
+            pass
