@@ -1,9 +1,8 @@
 from data.db_session import db_auth
 from typing import Optional
 from passlib.handlers.sha2_crypt import sha512_crypt as crypto
-from services.classes import *
+from services.classes import User, Target, Equipments, Project
 import astro.declination_limit_of_location as declination
-
 
 graph = db_auth()
 
@@ -178,6 +177,12 @@ def get_target():
     target = graph.run(query)
     return target
 
+def search_target(text: str):
+
+    query= "MATCH (t:target) where t.name =~ $text return t.name as name order by t.name "
+    target = graph.run(query, text = text).data()
+    return target
+
 def get_project(usr: str)->Optional[Project]:
     # this function will return project which user can join
 
@@ -194,3 +199,195 @@ def get_project_target(pid: int):
     query = "MATCH x=(p:project{PID:$pid})-[r:PHaveT]->(t:target) RETURN t.name as target"
     project_target = graph.run(query, pid=pid).data()
     return project_target
+
+    
+def create_project(usr: str,title: str,project_type: str,description: str,aperture_upper_limit: float,aperture_lower_limit: float,FoV_upper_limit: float,
+        FoV_lower_limit: float,pixel_scale_upper_limit: float,pixel_scale_lower_limit: float,mount_type: str,camera_type1: str,camera_type2: str,JohnsonB: str,
+        JohnsonR: str,JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz: str)->Optional[Project]:
+    #this function will create a project  
+    count = graph.run("MATCH (p:project) return p.PID  order by p.PID DESC limit 1 ").data()
+    project = Project()
+    if len(count) == 0:
+        project.PID = 0
+    else:
+        project.PID = count[0]['p.PID']+1
+    project.title = title
+    project.project_type = project_type
+    tmp = graph.run("MATCH (x:user {email: $usr})  return x.UID", usr = usr).data()
+    project.PI = tmp[0]['x.UID']
+    project.description = description
+    project.aperture_upper_limit = aperture_upper_limit
+    project.aperture_lower_limit = aperture_lower_limit
+    project.FoV_upper_limit = FoV_upper_limit
+    project.FoV_lower_limit = FoV_lower_limit
+    project.pixel_scale_upper_limit = pixel_scale_upper_limit
+    project.pixel_scale_lower_limit = pixel_scale_lower_limit
+    project.mount_type = mount_type
+    project.camera_type1 = camera_type1
+    project.camera_type2 = camera_type2
+    project.JohnsonB = JohnsonB
+    project.JohnsonR = JohnsonR
+    project.JohnsonV = JohnsonV
+    project.SDSSu = SDSSu
+    project.SDSSg = SDSSg
+    project.SDSSr = SDSSr
+    project.SDSSi = SDSSi
+    project.SDSSz = SDSSz
+    graph.create(project)
+
+    query= "MATCH (x:user {email: $usr}) MATCH (p:project {PID: $PID}) create (x)-[m:Manage {umanageid:$umanageid}]->(p)"
+    count = graph.run("MATCH ()-[m:Manage]->() return m.umanageid  order by m.umanageid DESC limit 1 ").data()
+    if len(count) == 0:
+        cnt = 0
+    else:
+        cnt = count[0]['m.umanageid']+1
+    graph.run(query, usr = usr, PID = project.PID,umanageid = cnt)
+    return project
+
+def upadte_project(usr: str,PID: int,umanageid: int,title: str,project_type: str,description: str,aperture_upper_limit: float,aperture_lower_limit: float,FoV_upper_limit: float,
+        FoV_lower_limit: float,pixel_scale_upper_limit: float,pixel_scale_lower_limit: float,mount_type: str,camera_type1: str,camera_type2: str,JohnsonB: str,
+        JohnsonR: str,JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz: str)->Optional[Project]:
+    print(PID)
+    print(umanageid)
+    print(usr)
+    query ="MATCH rel = (x:user)-[p:Manage {umanageid: $umanageid}]->(m:project) return rel"
+    print(graph.run(query,usr = usr,umanageid = umanageid).data())
+    query ="MATCH (x:user {email:$usr})-[p:Manage {umanageid: $umanageid}]->(m:project)" \
+             f"SET m.title='{title}', m.project_type='{project_type}', m.description='{description}', m.aperture_upper_limit='{aperture_upper_limit}', m.aperture_lower_limit='{aperture_lower_limit}'," \
+             f"m.FoV_upper_limit='{FoV_upper_limit}', m.FoV_lower_limit='{FoV_lower_limit}'," \
+             f"m.pixel_scale_upper_limit='{pixel_scale_upper_limit}', m.pixel_scale_lower_limit='{pixel_scale_lower_limit}',"\
+             f"m.mount_type='{mount_type}', m.camera_type1='{camera_type1}', m.camera_type2='{camera_type2}', m.JohnsonB='{JohnsonB}', m.JohnsonR='{JohnsonR}', m.JohnsonV='{JohnsonV}', " \
+             f"m.SDSSu='{SDSSu}', m.SDSSg='{SDSSg}', m.SDSSr='{SDSSr}', m.SDSSi='{SDSSi}', m.SDSSz='{SDSSz}'"  
+    project = graph.run(query,usr = usr, umanageid = umanageid)
+    return project   
+
+def delete_project(usr: str, PID: int, umanageid: int):
+    graph.run("MATCH (x:user {email:$usr})-[m:Manage {umanageid: $umanageid}]->(p:project) DELETE m,p", usr=usr, umanageid = umanageid)
+
+
+
+def add_project_manager(usr: str, PID: int):
+    
+    query= "MATCH (x:user {email: $usr}) MATCH (p:project {PID: $PID}) create (x)-[m:Manage {umanageid:$umanageid}]->(p)"
+    count = graph.run("MATCH ()-[m:Manage]->() return m.umanageid  order by m.umanageid DESC limit 1 ").data()
+    if len(count) == 0:
+        cnt = 0
+    else:
+        cnt = count[0]['m.umanageid']+1
+    graph.run(query, usr = usr, PID = PID,umanageid = cnt)
+    return
+
+def user_manage_projects_get(usr: str):
+    # return the project user manage 
+    query="MATCH (x:user {email:$usr})-[m:Manage]->(p:project) return m.umanageid as umanageid, p.title as title, p.project_type as project_type," \
+         "p.PI as PI, p.description as description, p.aperture_upper_limit as aperture_upper_limit, p.aperture_lower_limit as aperture_lower_limit," \
+        "p.FoV_upper_limit as FoV_upper_limit, p.FoV_lower_limit as FoV_lower_limit, p.pixel_scale_upper_limit as pixel_scale_upper_limit, p.pixel_scale_lower_limit as pixel_scale_lower_limit," \
+        "p.mount_type as mount_type, p.camera_type1 as camera_type1, p.camera_type2 as camera_type2, p.JohnsonB as JohnsonB, p.JohnsonR as JohnsonR, p.JohnsonV as JohnsonV, p.SDSSu as SDSSu," \
+        "p.SDSSg as SDSSg, p.SDSSr as SDSSr, p.SDSSi as SDSSi, p.SDSSz as SDSSz, p.PID as PID "
+    project = graph.run(query,usr = usr)
+    return project
+
+def create_project_target(usr: str, PID: int, TID: int, JohnsonB: str, JohnsonR: str, JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz: str):
+
+    query="MATCH (p:project {PID: $PID}) MATCH (t:target {TID:$TID}) create p-[pht:PHaveT" \
+        " {phavetid:$phavetid, JohnsonB:$JohnsonB, JohnsonV:$JohnsonV, JohnsonR:$JohnsonR, SDSSu:$SDSSu, SDSSg:$SDSSg, SDSSr:$SDSSr, SDSSi:$SDSSi, SDSSz:$SDSSz}]->t"
+    
+    count = graph.run("MATCH ()-[pht:PHAveT]->() return pht.phavetid  order by pht.phaveid DESC limit 1 ").data()
+    if len(count) == 0:
+        cnt = 0
+    else:
+        cnt = count[0]['pht.phavetid']+1
+    graph.run(query, PID = PID, TID = TID, phavetid = cnt, JohnsonB = JohnsonB, JohnsonR = JohnsonR, JohnsonV = JohnsonV, SDSSg = SDSSg, SDSSi = SDSSi, SDSSr = SDSSr, SDSSu = SDSSu, SDSSz = SDSSz)
+
+def apply_project(usr: str,PID: int)->int:
+    # this function will create an apply_to relationship to the project
+    # return value
+    # 1 : apply success
+
+    query = "MATCH (x:user {email:$usr}) MATCH (p:project {PID:$PID})  create (x)-[:Apply_to {applyid: $applyid, status: $status, apply_time: $apply_time}]->(p)"
+    time = graph.run("return datetime() as time").data() 
+    count = graph.run("MATCH ()-[apply:Apply_to]->() return apply.applyid  order by apply.applyid DESC limit 1 ").data()
+    if len(count) == 0:
+        cnt = 0
+    else:
+        cnt = count[0]['apply.applyid']+1
+    graph.run(query, usr = usr, PID = PID, applyid = cnt,status ='waiting', apply_time = time[0]['time'])
+    return 1
+
+def apply_project_status(usr: str, PID: int)->int:
+    # this function will chechk whether user apply to the project or not 
+    # 0 : error
+    # 1 : no 
+    # 2 : yes, waiting
+    # 3 : yes, already join
+    print(PID)
+    query = "MATCH (x:user {email:$usr})-[rel:Apply_to]->(p:project {PID:$PID}) return rel.status "
+    result = graph.run(query, usr = usr, PID = PID).data()
+    
+
+    if len(result) == 0 or result[len(result)-1] == 'reject':
+        return 1
+    elif result[len(result)-1]['rel.status'] == 'accept':
+        return 3
+    elif result[len(result)-1]['rel.status'] == 'waiting':
+        return 2
+    else:
+        return 0
+
+def get_apply_waiting(usr: str):
+    # this function will return the list of user's applied project which status is waiting
+    query = "MATCH (x:user {email:$usr})-[:Apply_to {status: $status}]->(p:project) return p.PID as PID"
+    waitiing_list = graph.run(query, usr = usr, status = 'waiting').data()
+    return waitiing_list
+
+def get_apply_history(usr: str):
+     #this function will return the apply history of an user 
+    query = "MATCH (x:user {email:$usr})-[rel:Apply_to]->(p:project) return p.PID as PID, rel.status as status, p.title as title, rel.apply_time as time"
+    apply_history = graph.run(query, usr = usr).data()
+    print(apply_history)
+    return apply_history
+
+def get_want_to_join_project(usr: str, PID : int):
+    # project manage can get ther list of who want to join his project
+    query = "MATCH (x:user)-[rel:Apply_to {status: $status}]->(p:project {PID: $PID}) return x.name as name, rel.applyid as applyid, rel.time as time "
+    apply_list = graph.run(query, status = 'waiting', PID = PID).data()
+    return apply_list
+
+def reject_join_project(usr: str, PID: int, UID: int, applyid: int):
+    # reject user'apply
+    # 1 : success, 0: error
+    query = "MATCH (x:user {email: $UID})-[rel:Apply_to {applyid: $applyid}]->(p:project {PID: $PID}) SET rel.status = $status return  rel.status as status"
+    result = graph.run(query, status = 'reject', PID = PID, UID = UID, applyid = applyid).data()
+    if len(result) == 1  and result[0]['status'] == 'reject':
+        return 1
+    else:
+        return 0
+
+def accept_join_project(usr: str, PID: int, UID: int, applyid: int):
+    # accept user'apply
+    query = "MATCH (x:user {email: $UID})-[rel:Apply_to {applyid: $applyid}]->(p:project {PID: $PID}) SET rel.status = $status return  rel.status as status"
+    result = graph.run(query, status = 'accept', PID = PID, UID = UID, applyid = applyid).data()
+    if len(result) == 1  and result[0]['status'] == 'accept':
+        
+        query = "CREATE (x:user {email: $UID})-[rel: Member_of {memberofid: $memberofid}]->(p:project {PID: $PID})"
+        count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofif  order by rel.memberofid DESC limit 1 ").data()
+        if len(count) == 0:
+            cnt = 0
+        else:
+            cnt = count[0]['rel.memberofid']+1
+        graph.run(query, UID = UID, PID =PID, memberofid = cnt)
+        return 1
+    else:
+        return 0
+
+def get_project_member(usr: str, PID: int):
+    # return the user in this project
+    query = "MATCH (x:user)-[rel:Member_of]->(p:project {PID: $PID}) return  x.name as name"
+    member = graph.run(query, PID =PID).data()
+    return member
+
+def get_project_join(usr: str):
+    #get all the project user have already joinied
+    query = "MATCH (x:user {email:$usr})-[rel:Member_of]->(p:project) return p.PID as PID, p.title as title"
+    join_list = graph.run(query, usr = usr).data()
+    return  join_list
