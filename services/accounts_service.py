@@ -278,6 +278,98 @@ def create_project_target(usr: str, PID: int, TID: int, JohnsonB: str, JohnsonR:
     if len(count) == 0:
         cnt = 0
     else:
-        cnt = count[0]['phavetid']+1
+        cnt = count[0]['pht.phavetid']+1
     graph.run(query, PID = PID, TID = TID, phavetid = cnt, JohnsonB = JohnsonB, JohnsonR = JohnsonR, JohnsonV = JohnsonV, SDSSg = SDSSg, SDSSi = SDSSi, SDSSr = SDSSr, SDSSu = SDSSu, SDSSz = SDSSz)
 
+def apply_project(usr: str,PID: int)->int:
+    # this function will create an apply_to relationship to the project
+    # return value
+    # 1 : apply success
+
+    query = "MATCH (x:user {email:$usr}) MATCH (p:project {PID:$PID})  create (x)-[:Apply_to {applyid: $applyid, status: $status, apply_time: $apply_time}]->(p)"
+    time = graph.run("return datetime() as time").data() 
+    count = graph.run("MATCH ()-[apply:Apply_to]->() return apply.applyid  order by apply.applyid DESC limit 1 ").data()
+    if len(count) == 0:
+        cnt = 0
+    else:
+        cnt = count[0]['apply.applyid']+1
+    graph.run(query, usr = usr, PID = PID, applyid = cnt,status ='waiting', apply_time = time[0]['time'])
+    return 1
+
+def apply_project_status(usr: str, PID: int)->int:
+    # this function will chechk whether user apply to the project or not 
+    # 0 : error
+    # 1 : no 
+    # 2 : yes, waiting
+    # 3 : yes, already join
+    print(PID)
+    query = "MATCH (x:user {email:$usr})-[rel:Apply_to]->(p:project {PID:$PID}) return rel.status "
+    result = graph.run(query, usr = usr, PID = PID).data()
+    
+
+    if len(result) == 0 or result[len(result)-1] == 'reject':
+        return 1
+    elif result[len(result)-1]['rel.status'] == 'accept':
+        return 3
+    elif result[len(result)-1]['rel.status'] == 'waiting':
+        return 2
+    else:
+        return 0
+
+def get_apply_waiting(usr: str):
+    # this function will return the list of user's applied project which status is waiting
+    query = "MATCH (x:user {email:$usr})-[:Apply_to {status: $status}]->(p:project) return p.PID as PID"
+    waitiing_list = graph.run(query, usr = usr, status = 'waiting').data()
+    return waitiing_list
+
+def get_apply_history(usr: str):
+     #this function will return the apply history of an user 
+    query = "MATCH (x:user {email:$usr})-[rel:Apply_to]->(p:project) return p.PID as PID, rel.status as status, p.title as title, rel.apply_time as time"
+    apply_history = graph.run(query, usr = usr).data()
+    print(apply_history)
+    return apply_history
+
+def get_want_to_join_project(usr: str, PID : int):
+    # project manage can get ther list of who want to join his project
+    query = "MATCH (x:user)-[rel:Apply_to {status: $status}]->(p:project {PID: $PID}) return x.name as name, rel.applyid as applyid, rel.time as time "
+    apply_list = graph.run(query, status = 'waiting', PID = PID).data()
+    return apply_list
+
+def reject_join_project(usr: str, PID: int, UID: int, applyid: int):
+    # reject user'apply
+    # 1 : success, 0: error
+    query = "MATCH (x:user {email: $UID})-[rel:Apply_to {applyid: $applyid}]->(p:project {PID: $PID}) SET rel.status = $status return  rel.status as status"
+    result = graph.run(query, status = 'reject', PID = PID, UID = UID, applyid = applyid).data()
+    if len(result) == 1  and result[0]['status'] == 'reject':
+        return 1
+    else:
+        return 0
+
+def accept_join_project(usr: str, PID: int, UID: int, applyid: int):
+    # accept user'apply
+    query = "MATCH (x:user {email: $UID})-[rel:Apply_to {applyid: $applyid}]->(p:project {PID: $PID}) SET rel.status = $status return  rel.status as status"
+    result = graph.run(query, status = 'accept', PID = PID, UID = UID, applyid = applyid).data()
+    if len(result) == 1  and result[0]['status'] == 'accept':
+        
+        query = "CREATE (x:user {email: $UID})-[rel: Member_of {memberofid: $memberofid}]->(p:project {PID: $PID})"
+        count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofif  order by rel.memberofid DESC limit 1 ").data()
+        if len(count) == 0:
+            cnt = 0
+        else:
+            cnt = count[0]['rel.memberofid']+1
+        graph.run(query, UID = UID, PID =PID, memberofid = cnt)
+        return 1
+    else:
+        return 0
+
+def get_project_member(usr: str, PID: int):
+    # return the user in this project
+    query = "MATCH (x:user)-[rel:Member_of]->(p:project {PID: $PID}) return  x.name as name"
+    member = graph.run(query, PID =PID).data()
+    return member
+
+def get_project_join(usr: str):
+    #get all the project user have already joinied
+    query = "MATCH (x:user {email:$usr})-[rel:Member_of]->(p:project) return p.PID as PID, p.title as title"
+    join_list = graph.run(query, usr = usr).data()
+    return  join_list

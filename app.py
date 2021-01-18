@@ -229,12 +229,34 @@ def project_post():
         usr = session["usr"]
         session["usr"] = usr
         if request.form.get('button') == 'Create':
-            print('redirect')
             return redirect(url_for("project_create_get"))
-        if request.form.get('button') == 'Join':
-            print(request.form.get('PID'))        
+        elif request.form.get('button') == 'Apply_history':
+            print('history')
+            return redirect(url_for("project_apply_history_get"))
+        elif request.form.get('button') == 'Join':
+            PID = request.form.get('PID').strip()
+            flag = apply_project_status(usr,int(PID))
+            if flag == 1:
+                apply_project(usr,int(PID))
+            #elif flag == 2:
+                # handle already apply
+            #elif flag == 3:
+                #handle already join project
+            #else:
+                # handle error
         projects = get_project(usr)
         return render_template("projects/project.html", projects = projects)
+    else:
+        return redirect(url_for("login_get"))
+
+
+@app.route('/projects/project_apply_history', methods=['GET'])
+def project_apply_history_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        history = get_apply_history(usr)
+        return render_template("projects/project_apply_history.html", history = history)
     else:
         return redirect(url_for("login_get"))
 
