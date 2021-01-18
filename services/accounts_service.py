@@ -435,13 +435,21 @@ def fliter__project_target_(usr: str, PID: int):
     return target
 
 
-def get_observable_time(uhaveid, tid_list):
-    # get current time for further calculation
+def get_uhaveid(usr, eid):
+    query_uhaveid = "MATCH p=(x:user{email:$usr})-[h:UhaveE]->(e:equipments{EID:$eid}) return h.uhaveid as uhaveid"
+    uhid = graph.run(query_uhaveid, usr=usr, eid=eid).data()
+
+    uhaveid = int(uhid[0]['uhaveid'])
+
+    return uhaveid
+
+def get_observable_time(usr: str, eid: int):
+     # get current time for further calculation
     current_time = datetime.now()
     current_time_sec = str(current_time).split('.')[0]
     
-    # set uhaveid for testing
-    uhaveid = 888
+    # get the uhaveid for testing
+    uhaveid = get_uhaveid(usr, eid)
     
     # get information from uhavee and equipment table
     query_relation = "MATCH (x:user)-[h:UhaveE{uhaveid:$uhaveid}]->(e:equipments) return h.longitude as longitude, h.latitude as latitude, h.altitude as altitude, e.elevation_lim as elevation_lim"
