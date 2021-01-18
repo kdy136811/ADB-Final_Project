@@ -49,10 +49,10 @@
                         {% endif %}
                     {% endwith %}
         </form>
-        <form method="post">
             <h2 style="color:black">Equipments list</h2>
             {% if user_equipments %}
              {% for info in user_equipments %}
+             <form method="post">
             <h2 style="color:black">equipments {{loop.index}}</h2>
                 <input class="form-control" type="hidden" name='uhaveid' value="{{info.id}}" >
                 <input class="form-control" type="text" name="site" placeholder=" Site" value="{{ info.site }}">
@@ -85,6 +85,7 @@
                 <button name="button" type="submit" class="bt btn-info btn-sm" value="update">Update</button>
                 <button name="button" type="submit" class="bt btn-info btn-sm" value="delete">Delete</button>
             </div>
+             </form>    
             {% endfor%}
             {% endif%}
         </form>    
