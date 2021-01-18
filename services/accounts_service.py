@@ -2,6 +2,7 @@ from data.db_session import db_auth
 from typing import Optional
 from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 from services.classes import *
+import astro.declination_limit_of_location as declination
 
 
 graph = db_auth()
@@ -76,7 +77,7 @@ def create_user_equipments(usr: str,eid: int ,Site: str,Longitude:float,Latitude
 
     query ="MATCH (x:user {email:$usr})  MATCH (e:equipments {EID:$EID})" \
     "CREATE (x)-[h:UhaveE{ uhaveid: $uhaveid, site:$Site, longitude:$Longitude, latitude:$Latitude" \
-    ", altitude:$Altitude, time_zone:$tz, daylight_saving:$daylight, water_vapor:$wv,light_pollution:$light_pollution}]->(e) return h.uhaveid as id, h.site as site, h.longitude as longitude," \
+    ", altitude:$Altitude, time_zone:$tz, daylight_saving:$daylight, water_vapor:$wv,light_pollution:$light_pollution, declination_limit:$declination_limit}]->(e) return h.uhaveid as id, h.site as site, h.longitude as longitude," \
     "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollution as light_pollution"
 
     count = graph.run("MATCH (x:user)-[p:UhaveE]->(:equipments) return p.uhaveid order by p.uhaveid DESC limit 1").data()
@@ -85,7 +86,8 @@ def create_user_equipments(usr: str,eid: int ,Site: str,Longitude:float,Latitude
     else:
         uhaveid = count[0]['p.uhaveid']+1
     print(uhaveid)
-    user_equipments = graph.run(query,usr=usr, EID = eid, Site=Site,Longitude=Longitude,Latitude=Latitude,Altitude=Altitude,tz=tz,daylight=daylight,wv=wv,light_pollution=light_pollution, uhaveid = uhaveid)
+    user_equipments = graph.run(query,usr=usr, EID = eid, Site=Site,Longitude=Longitude,Latitude=Latitude,Altitude=Altitude,tz=tz,daylight=daylight,wv=wv,light_pollution=light_pollution, uhaveid = uhaveid, declination_limit=0)
+    update_declination(uhaveid)
     return user_equipments
 
 def update_user_equipments(aperture: float,Fov: float,pixel_scale: float,tracking_accuracy: float,lim_magnitude: float,elevation_lim: float,mount_type: str,camera_type1:str,
@@ -99,6 +101,7 @@ def update_user_equipments(aperture: float,Fov: float,pixel_scale: float,trackin
              f"e.elevation_lim='{elevation_lim}', e.mount_type='{mount_type}', e.camera_type1='{camera_type1}', e.camera_type2='{camera_type2}', e.JohnsonB='{JohnsonB}', e.JohnsonR='{JohnsonR}', e.JohnsonV='{JohnsonV}', " \
              f"e.SDSSu='{SDSSu}', e.SDSSg='{SDSSg}', e.SDSSr='{SDSSr}', e.SDSSi='{SDSSi}', e.SDSSz='{SDSSz}'"  
     user_equipments = graph.run(query,usr = usr, uhaveid = uhaveid)
+    update_declination(uhaveid)
     return user_equipments
 
 def get_user_equipments(usr: str):
@@ -107,10 +110,20 @@ def get_user_equipments(usr: str):
         return None
     user_equipments = graph.run("MATCH (x:user {email:$usr})-[h:UhaveE]->(e:equipments) return e.EID as eid,h.site as site, h.longitude as longitude," \
         "h.latitude as latitude, h.altitude as altitude, h.time_zone as time_zone, h.daylight_saving as daylight_saving, h.water_vapor as water_vapor, h.light_pollution as light_pollution," \
-        "e.aperture as aperture, e.Fov as Fov, e.pixel_scale as pixel_scale,e.tracking_accuracy as  tracking_accuracy, e.lim_magnitude as lim_magnitude, e.elevation_lim as elevation_lim," \
+        "e.aperture as aperture, e.Fov as Fov, e.pixel_scale as pixel_scale, e.tracking_accuracy as accuracy, e.lim_magnitude as lim_magnitude, e.elevation_lim as elevation_lim," \
         "e.mount_type as mount_type, e.camera_type1 as camera_type1, e.camera_type2 as camera_type2, e.JohnsonB as JohnsonB, e.JohnsonR as JohnsonR, e.JohnsonV as JohnsonV, e.SDSSu as SDSSu," \
         "e.SDSSg as SDSSg, e.SDSSr as SDSSr, e.SDSSi as SDSSi,e.SDSSz as SDSSz, h.uhaveid as id" ,usr=usr).data()
     return user_equipments
+
+def update_declination(uhaveid):
+    query_relation = "MATCH (x:user)-[h:UhaveE{uhaveid:$uhaveid}]->(e:equipments) return h.longitude as longitude, h.latitude as latitude, h.altitude as altitude, e.elevation_lim as elevation_lim"
+    eq_info = graph.run(query_relation, uhaveid=uhaveid).data()
+
+    dec_lim = declination.run(float(eq_info[0]['longitude']), float(eq_info[0]['latitude']), float(eq_info[0]['altitude']), float(eq_info[0]['elevation_lim']))
+
+    query_update = "MATCH (x:user)-[h:UhaveE{uhaveid:$uhaveid}]->(e:equipments) set h.declination_limit=$dec_lim"
+    graph.run(query_update, uhaveid=uhaveid, dec_lim=dec_lim)
+
 
 def delete_user_equipment(usr: str,uhaveid: int):
     #delete user's equipment
@@ -174,5 +187,10 @@ def get_project(usr: str)->Optional[Project]:
         "n.FoV_upper_limit as FoV_upper_limit, n.FoV_lower_limit as FoV_lower_limit, n.pixel_scale_upper_limit as pixel_scale_upper_limit, n.pixel_scale_lower_limit as pixel_scale_lower_limit," \
         "n.mount_type as mount_type, n.camera_type1 as camera_type1, n.camera_type2 as camera_type2, n.JohnsonB as JohnsonB, n.JohnsonR as JohnsonR, n.JohnsonV as JohnsonV, n.SDSSu as SDSSu," \
         "n.SDSSg as SDSSg, n.SDSSr as SDSSr, n.SDSSi as SDSSi, n.SDSSz as SDSSz, n.PID as PID ORDER BY n.PID"
-    project = graph.run(query, usr = usr)
+    project = graph.run(query, usr = usr).data()
     return project
+
+def get_project_target(pid: int):
+    query = "MATCH x=(p:project{PID:$pid})-[r:PHaveT]->(t:target) RETURN t.name as target"
+    project_target = graph.run(query, pid=pid).data()
+    return project_target

@@ -210,6 +210,20 @@ def project_get():
         return redirect(url_for("login_get"))
 
 
+@app.route('/projects/project', methods=['POST'])
+def project_post():
+    hid = request.form.get('PID').strip()
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        if request.form.get('button') == 'Detail':
+            print(hid)
+            project_target = get_project_target(int(hid))
+            return render_template("projects/project_target.html", project_target = project_target)
+    else:
+        return redirect(url_for("login_get"))
+
+
 @app.route('/accounts/logout')
 def logout():
     session.pop("usr", None)
