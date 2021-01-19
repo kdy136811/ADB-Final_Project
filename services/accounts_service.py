@@ -218,8 +218,8 @@ def get_project(usr: str)->Optional[Project]:
             if equipment[i]['camera_type1'] != project[j]['camera_type1']: continue
             if equipment[i]['camera_type2'] != project[j]['camera_type2']: continue
             print(project[j])
-            n = graph.run("MATCH (x:user{email: $usr}) return x.name as name",usr = usr).data()
-            project[j]['name'] = n[0]['name']
+            n = graph.run("MATCH (x:user{email: $usr}) return x.name as manager_name",usr = usr).data()
+            project[j]['manager_name'] = n[0]['name']
             result.append(project[j]) 
         #query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
         #"and n.JohnsonB=e.JohnsonB and n.JohnsonV=e.JohnsonV and n.JohnsonR=e.JohnsonR  and n.SDSSu=e.SDSSu  and n.SDSSg=e.SDSSg and n.SDSSr=e.SDSSr and n.SDSSi=e.SDSSi and n.SDSSz=e.SDSSz" \
