@@ -394,6 +394,48 @@ def get_project_join(usr: str):
     join_list = graph.run(query, usr = usr).data()
     return  join_list
 
+def fliter__project_target_(usr: str, PID: int):
+
+    query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project {PID: $PID}) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
+        "and n.JohnsonB=e.JohnsonB and n.JohnsonV=e.JohnsonV and n.JohnsonR=e.JohnsonR  and n.SDSSu=e.SDSSu  and n.SDSSg=e.SDSSg and n.SDSSr=e.SDSSr and n.SDSSi=e.SDSSi and n.SDSSz=e.SDSSz" \
+        " return e.EID as EID,e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz"
+    equipmet = graph.run(query, usr = usr, PID = PID).data()
+    project_target = graph.run("MATCH (p:project {PID: $PID})-[pht:PHaveT]->(t:target) " \
+        " return pht.JohnsonB as jb, pht.JohnsonV as jv, pht.JohnsonR as jr, pht.SDSSu as su, pht.SDSSg as sg, pht.SDSSr as sr , pht.SDSSi as si, pht.SDSSz as sz"
+    ", t.TID as TID, t.name as name", PID = PID).data()
+    print(project_target)
+    target = []
+    for i in range(len(equipmet)):
+        for j in range(len(project_target)):
+            if project_target[j]['TID'] in target: continue
+            if equipmet[i]['jb'] == 'n':
+                if project_target[j]['jb'] == 'y': break
+
+            if equipmet[i]['jv'] != 'n':
+                if project_target[j]['jv'] == 'y': break
+
+            if equipmet[i]['jr'] != 'n':
+                if project_target[j]['jr'] == 'y': break
+
+            if equipmet[i]['su'] != 'n':
+                if project_target[j]['su'] == 'y': break
+
+            if equipmet[i]['sg'] != 'n':
+                if project_target[j]['sg'] == 'y': break
+
+            if equipmet[i]['sr'] != 'n':
+                if project_target[j]['sr'] == 'y': break
+
+            if equipmet[i]['si'] != 'n':
+                if project_target[j]['si'] == 'y': break
+
+            if equipmet[i]['sz'] != 'n':
+                if project_target[j]['sz'] == 'y': break
+            target.append((project_target[j]['TID'], project_target[j]['name'])) 
+    print(target)
+    return target
+
+
 def get_uhaveid(usr, eid):
     query_uhaveid = "MATCH p=(x:user{email:$usr})-[h:UhaveE]->(e:equipments{EID:$eid}) return h.uhaveid as uhaveid"
     uhid = graph.run(query_uhaveid, usr=usr, eid=eid).data()
