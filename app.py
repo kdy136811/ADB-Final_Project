@@ -315,6 +315,26 @@ def project_create_post():
     else:
         return redirect(url_for("login_get"))
 
+@app.route('/schedule/schedule', methods=['GET'])
+def schedule_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        if request.form.get('button') == "Create":
+            redirect(url_for("schedule_create_post"))
+        return render_template("schedule/schedule.html")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/schedule/schedule', methods=['POST'])
+def schedule_create_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        user_equipments = get_user_equipments(usr)
+        return render_template("schedule/schedule_create.html", user_equipments = user_equipments)
+    else:
+        return redirect(url_for("login_get"))
 # @app.route('/projects/project', methods=['POST'])
 # def project_post():
 #     hid = request.form.get('PID').strip()
