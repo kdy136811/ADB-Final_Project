@@ -186,15 +186,51 @@ def search_target(text: str):
 
 def get_project(usr: str)->Optional[Project]:
     # this function will return project which user can join
-
-    query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
-        "and n.JohnsonB=e.JohnsonB and n.JohnsonV=e.JohnsonV and n.JohnsonR=e.JohnsonR  and n.SDSSu=e.SDSSu  and n.SDSSg=e.SDSSg and n.SDSSr=e.SDSSr and n.SDSSi=e.SDSSi and n.SDSSz=e.SDSSz" \
-        " return n.title as title, n.project_type as project_type, n.PI as PI, n.description as description, n.aperture_upper_limit as aperture_upper_limit, n.aperture_lower_limit as aperture_lower_limit," \
+    query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments) " \
+        " return e.EID as EID,e.mount_type as mount_type, e.camera_type1 as camera_type1, e.camera_type2 as camera_type2,e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz"
+    equipment = graph.run(query, usr = usr).data()
+    print(equipment) 
+    query = "MATCH (n:project) return n.title as title, n.project_type as project_type, n.PI as PI, n.description as description, n.aperture_upper_limit as aperture_upper_limit, n.aperture_lower_limit as aperture_lower_limit," \
         "n.FoV_upper_limit as FoV_upper_limit, n.FoV_lower_limit as FoV_lower_limit, n.pixel_scale_upper_limit as pixel_scale_upper_limit, n.pixel_scale_lower_limit as pixel_scale_lower_limit," \
         "n.mount_type as mount_type, n.camera_type1 as camera_type1, n.camera_type2 as camera_type2, n.JohnsonB as JohnsonB, n.JohnsonR as JohnsonR, n.JohnsonV as JohnsonV, n.SDSSu as SDSSu," \
-        "n.SDSSg as SDSSg, n.SDSSr as SDSSr, n.SDSSi as SDSSi, n.SDSSz as SDSSz, n.PID as PID ORDER BY n.PID"
-    project = graph.run(query, usr = usr).data()
-    return project
+        "n.SDSSg as SDSSg, n.SDSSr as SDSSr, n.SDSSi as SDSSi, n.SDSSz as SDSSz, n.PID as PID order by PID" 
+    project = graph.run(query).data()
+    result = []
+    for i in range(len(equipment)):
+        for j in range(len(project)):
+            if project[j]['PID'] in result: continue
+            if equipment[i]['jb'] == 'n':
+                if project[j]['JohnsonB'] == 'y': continue
+            if equipment[i]['jv'] == 'n':
+                if project[j]['JohnsonV'] == 'y': continue
+            if equipment[i]['jr'] == 'n':
+                if project[j]['JohnsonR'] == 'y': continue
+            if equipment[i]['su'] == 'n':
+                if project[j]['SDSSu'] == 'y': continue
+            if equipment[i]['sg'] == 'n':
+                if project[j]['SDSSg'] == 'y': continue
+            if equipment[i]['sr'] == 'n':
+                if project[j]['SDSSr'] == 'y': continue
+            if equipment[i]['si'] == 'n':
+                if project[j]['SDSSi'] == 'y': continue
+            if equipment[i]['sz'] == 'n':
+                if project[j]['SDSSz'] == 'y': continue
+            if equipment[i]['mount_type'] != project[j]['mount_type']: continue
+            if equipment[i]['camera_type1'] != project[j]['camera_type1']: continue
+            if equipment[i]['camera_type2'] != project[j]['camera_type2']: continue
+            print(project[j])
+            n = graph.run("MATCH (x:user{email: $usr}) return x.name as manager_name",usr = usr).data()
+            project[j]['manager_name'] = n[0]['name']
+            result.append(project[j]) 
+        #query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
+        #"and n.JohnsonB=e.JohnsonB and n.JohnsonV=e.JohnsonV and n.JohnsonR=e.JohnsonR  and n.SDSSu=e.SDSSu  and n.SDSSg=e.SDSSg and n.SDSSr=e.SDSSr and n.SDSSi=e.SDSSi and n.SDSSz=e.SDSSz" \
+        #" return n.title as title, n.project_type as project_type, n.PI as PI, n.description as description, n.aperture_upper_limit as aperture_upper_limit, n.aperture_lower_limit as aperture_lower_limit," \
+        #"n.FoV_upper_limit as FoV_upper_limit, n.FoV_lower_limit as FoV_lower_limit, n.pixel_scale_upper_limit as pixel_scale_upper_limit, n.pixel_scale_lower_limit as pixel_scale_lower_limit," \
+        #"n.mount_type as mount_type, n.camera_type1 as camera_type1, n.camera_type2 as camera_type2, n.JohnsonB as JohnsonB, n.JohnsonR as JohnsonR, n.JohnsonV as JohnsonV, n.SDSSu as SDSSu," \
+        #"n.SDSSg as SDSSg, n.SDSSr as SDSSr, n.SDSSi as SDSSi, n.SDSSz as SDSSz, n.PID as PID ORDER BY n.PID"
+    #project = graph.run(query, usr = usr).data()
+    print(result)
+    return result
 
 def get_project_target(pid: int):
     query = "MATCH x=(p:project{PID:$pid})-[r:PHaveT]->(t:target) RETURN t.name as target, t"
@@ -266,6 +302,12 @@ def delete_project(usr: str, PID: int, umanageid: int):
     graph.run("MATCH (x:user {email:$usr})-[m:Manage {umanageid: $umanageid}]->(p:project) DELETE m,p", usr=usr, umanageid = umanageid)
 
 
+def get_project_manager_name(usr: str,PID: int):
+    query = "MATCH (p:project {PID: $PID}) return p.PI as PI"
+    result = graph.run(query,PID = PID).data()
+    query = "MATCH (x:user {UID: $UID}) ,return x.name as name"
+    manager_name = graph.run(query, UID = result[0]['PI']).data()
+    return manager_name
 
 def add_project_manager(usr: str, PID: int):
     
@@ -393,14 +435,14 @@ def get_project_join(usr: str):
     join_list = graph.run(query, usr = usr).data()
     return  join_list
 
-def fliter__project_target_(usr: str, PID: int):
+def fliter_project_target(usr: str, PID: int):
     
     query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project {PID: $PID}) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
         "and n.JohnsonB=e.JohnsonB and n.JohnsonV=e.JohnsonV and n.JohnsonR=e.JohnsonR  and n.SDSSu=e.SDSSu  and n.SDSSg=e.SDSSg and n.SDSSr=e.SDSSr and n.SDSSi=e.SDSSi and n.SDSSz=e.SDSSz" \
         " return e.EID as EID,e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz"
     equipmet = graph.run(query, usr = usr, PID = PID).data()
     project_target = graph.run("MATCH (p:project {PID: $PID})-[pht:PHaveT]->(t:target) " \
-        " return pht.JohnsonB as jb, pht.JohnsonV as jv, pht.JohnsonR as jr, pht.SDSSu as su, pht.SDSSg as sg, pht.SDSSr as sr , pht.SDSSi as si, pht.SDSSz as sz"
+        " return pht.JohnsonB as JohnsonB, pht.JohnsonV as JohnsonV, pht.JohnsonR as JohnsonR, pht.SDSSu as SDSSu, pht.SDSSg as SDSSg, pht.SDSSr as SDSSr , pht.SDSSi as SDSSi, pht.SDSSz as SDSSz"
     ", t.TID as TID, t.name as name", PID = PID).data()
     print(project_target)
     target = []
@@ -408,32 +450,34 @@ def fliter__project_target_(usr: str, PID: int):
         for j in range(len(project_target)):
             if project_target[j]['TID'] in target: continue
             if equipmet[i]['jb'] == 'n':
-                if project_target[j]['jb'] == 'y': break
-           
-            if equipmet[i]['jv'] != 'n':
-                if project_target[j]['jv'] == 'y': break
-           
-            if equipmet[i]['jr'] != 'n':
-                if project_target[j]['jr'] == 'y': break
-           
-            if equipmet[i]['su'] != 'n':
-                if project_target[j]['su'] == 'y': break
-           
-            if equipmet[i]['sg'] != 'n':
-                if project_target[j]['sg'] == 'y': break
-           
-            if equipmet[i]['sr'] != 'n':
-                if project_target[j]['sr'] == 'y': break
-           
-            if equipmet[i]['si'] != 'n':
-                if project_target[j]['si'] == 'y': break
-           
-            if equipmet[i]['sz'] != 'n':
-                if project_target[j]['sz'] == 'y': break
-            target.append((project_target[j]['TID'], project_target[j]['name'])) 
+                if project_target[j]['jb'] == 'y': continue
+            if equipmet[i]['jv'] == 'n':
+                if project_target[j]['jv'] == 'y': continue
+            if equipmet[i]['jr'] == 'n':
+                if project_target[j]['jr'] == 'y': continue
+            if equipmet[i]['su'] == 'n':
+                if project_target[j]['su'] == 'y': continue
+            if equipmet[i]['sg'] == 'n':
+                if project_target[j]['sg'] == 'y': continue
+            if equipmet[i]['sr'] == 'n':
+                if project_target[j]['sr'] == 'y': continue
+            if equipmet[i]['si'] == 'n':
+                if project_target[j]['si'] == 'y': continue
+            if equipmet[i]['sz'] == 'n':
+                if project_target[j]['sz'] == 'y': continue
+            target.append(project_target[j])
     print(target)
     return target
 
+<<<<<<< HEAD
+def create_schedule(usr: str,EID: int):
+        
+        schedule = Schedule()
+        schedule.SID
+        schedule.date #Y:M:D
+        schedule.section
+        query="MATCH (e:equipment {EID: $EID}) CREATE (e)-[:have_s]->(:schedule)"     
+=======
 
 def get_uhaveid(usr, eid):
     query_uhaveid = "MATCH p=(x:user{email:$usr})-[h:UhaveE]->(e:equipments{EID:$eid}) return h.uhaveid as uhaveid"
@@ -486,3 +530,4 @@ def get_observable_time(usr: str, eid: int):
         else:
             # return something else
             pass
+>>>>>>> origin/main
