@@ -4,6 +4,7 @@ from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 from services.classes import User, Target, Equipments, Project
 import astro.declination_limit_of_location as declination
 import astro.astroplan_calculations as schedule
+import astro.nighttime_calculations as night
 
 graph = db_auth()
 
@@ -197,7 +198,7 @@ def get_project(usr: str)->Optional[Project]:
     return project
 
 def get_project_target(pid: int):
-    query = "MATCH x=(p:project{PID:$pid})-[r:PHaveT]->(t:target) RETURN t.name as target, t"
+    query = "MATCH x=(p:project{PID:$pid})-[r:PHaveT]->(t:target) RETURN t.name as target"
     project_target = graph.run(query, pid=pid).data()
     return project_target
 
@@ -393,48 +394,6 @@ def get_project_join(usr: str):
     join_list = graph.run(query, usr = usr).data()
     return  join_list
 
-def fliter__project_target_(usr: str, PID: int):
-    
-    query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project {PID: $PID}) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
-        "and n.JohnsonB=e.JohnsonB and n.JohnsonV=e.JohnsonV and n.JohnsonR=e.JohnsonR  and n.SDSSu=e.SDSSu  and n.SDSSg=e.SDSSg and n.SDSSr=e.SDSSr and n.SDSSi=e.SDSSi and n.SDSSz=e.SDSSz" \
-        " return e.EID as EID,e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz"
-    equipmet = graph.run(query, usr = usr, PID = PID).data()
-    project_target = graph.run("MATCH (p:project {PID: $PID})-[pht:PHaveT]->(t:target) " \
-        " return pht.JohnsonB as jb, pht.JohnsonV as jv, pht.JohnsonR as jr, pht.SDSSu as su, pht.SDSSg as sg, pht.SDSSr as sr , pht.SDSSi as si, pht.SDSSz as sz"
-    ", t.TID as TID, t.name as name", PID = PID).data()
-    print(project_target)
-    target = []
-    for i in range(len(equipmet)):
-        for j in range(len(project_target)):
-            if project_target[j]['TID'] in target: continue
-            if equipmet[i]['jb'] == 'n':
-                if project_target[j]['jb'] == 'y': break
-           
-            if equipmet[i]['jv'] != 'n':
-                if project_target[j]['jv'] == 'y': break
-           
-            if equipmet[i]['jr'] != 'n':
-                if project_target[j]['jr'] == 'y': break
-           
-            if equipmet[i]['su'] != 'n':
-                if project_target[j]['su'] == 'y': break
-           
-            if equipmet[i]['sg'] != 'n':
-                if project_target[j]['sg'] == 'y': break
-           
-            if equipmet[i]['sr'] != 'n':
-                if project_target[j]['sr'] == 'y': break
-           
-            if equipmet[i]['si'] != 'n':
-                if project_target[j]['si'] == 'y': break
-           
-            if equipmet[i]['sz'] != 'n':
-                if project_target[j]['sz'] == 'y': break
-            target.append((project_target[j]['TID'], project_target[j]['name'])) 
-    print(target)
-    return target
-
-
 def get_uhaveid(usr, eid):
     query_uhaveid = "MATCH p=(x:user{email:$usr})-[h:UhaveE]->(e:equipments{EID:$eid}) return h.uhaveid as uhaveid"
     uhid = graph.run(query_uhaveid, usr=usr, eid=eid).data()
@@ -445,7 +404,7 @@ def get_uhaveid(usr, eid):
 
 def get_observable_time(usr: str, eid: int):
      # get current time for further calculation
-    current_time = datetime.now()
+    current_time = datetime.now().replace(microsecond=0, second=0, minute=0) + datetime.timedelta(hours=1)
     current_time_sec = str(current_time).split('.')[0]
     
     # get the uhaveid for testing
@@ -486,3 +445,21 @@ def get_observable_time(usr: str, eid: int):
         else:
             # return something else
             pass
+
+
+def get_night_time(uhaveid):
+    query_eq = "MATCH (x:user)-[r:UhaveE{uhaveid:$uhaveid}]->(e:equipments) RETURN r.longitude as longitude, r.latitude as latitude, r.altitude as altitude"
+    eq_info = graph.run(query_eq, uhaveid=uhaveid).data()
+
+    longitude = str(eq_info[0]['longitude'])
+    latitude = str(eq_info[0]['latitude'])
+    altitude = float(eq_info[0]['altitude'])
+
+    try:
+        night = night(longitude, latitude, altitude)
+    except ephem.NeverUpError:
+        night = [1]*24
+    except ephem.AlwaysUpError:
+        night = [0]*24
+    
+    return night
