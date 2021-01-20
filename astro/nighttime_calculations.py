@@ -3,7 +3,7 @@ import datetime
 
 def night(longitude, latitude, altitude):
     # nighttime array, 0 for daytime and 1 for nighttime
-    night = [0]*24
+    night = [-2]*24
 
     # round up current time
     current = datetime.datetime.now().replace(microsecond=0, second=0, minute=0) + datetime.timedelta(hours=1)
@@ -46,13 +46,13 @@ def night(longitude, latitude, altitude):
                 n2 = int(str(sorted_list[i+2][0]-current).split(':')[0])
                 for j in range(24):
                     if j < n1 or j >= n2:
-                        night[j] = 1
+                        night[j] = -1
             else:
                 print("sun set first")
                 n1 = int(str(sorted_list[i+1][0]-current).split(':')[0])
                 n2 = int(str(sorted_list[i+2][0]-current).split(':')[0])+1
                 for j in range(24):
                     if j >= n1 and j < n2:
-                        night[j] = 1
+                        night[j] = -1
     
-    return night
+    return night, current

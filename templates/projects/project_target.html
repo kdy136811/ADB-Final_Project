@@ -8,7 +8,7 @@
             <h2>Project Targets</h2>
                 {%for info in project_target%}    
                 <h4>target {{loop.index}}</h4>
-                <input class="form-control" type="text" name="target" value="{{info.target}}" >
+                <input class="form-control" type="text" name="name" value="{{info.name}}" >
                 {% endfor%}
         </form>
     </div>
