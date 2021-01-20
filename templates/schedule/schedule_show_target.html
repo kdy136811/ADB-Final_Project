@@ -1,0 +1,24 @@
+{% extends "shared/_layout.html" %}
+{% block title %}Target{% endblock %}
+{% block main_content %}
+
+<div class="main">
+    <div class="form-wrapper">
+            <h2>Target</h2>
+                {%for info in target_observe_time%}    
+                <h4>target {{loop.index}}</h4>
+                <form method="post">
+                <input class="form-control" type="hidden" name="TID" value="{{info.TID}}" >
+                <input class="form-control" type="text" name="name" value="{{info.name}}" >
+                <input class="form-control" type="text" name="start" value="{{info.start}}" >
+                <input class="form-control" type="text" name="end" value="{{info.end}}" >
+                <input class="form-control" type="text" name="time_section" value="{{info.time_section}}" >
+                <input class="form-control" type="text" name="hour" value="{{info.hour}}" >
+                  <div class="actions">
+                    <button name="button" type="submit" class="bt btn-info btn-sm" value="add">Add into Schedule</button>
+                  </div>
+                </form>
+                {% endfor%}
+    </div>
+</div>
+{% endblock %}
