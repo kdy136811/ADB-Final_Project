@@ -4,10 +4,9 @@ from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 from services.classes import User, Target, Equipments, Project, Schedule
 from datetime import datetime, timedelta
 
-
-import services.declination_limit_of_location as declination
-import services.astroplan_calculations as schedule
-import services.nighttime_calculations as night
+import astro.declination_limit_of_location as declination
+import astro.astroplan_calculations as schedule
+import astro.nighttime_calculations as night
 import ephem
 
 graph = db_auth()
@@ -94,7 +93,7 @@ def create_user_equipments(usr: str,eid: int ,Site: str,Longitude:float,Latitude
     update_declination(uhaveid)
 
     # create a empty schedule for the equipment
-    create_schedule(eid, uhaveid)
+    _ = create_schedule(eid, uhaveid)
 
     return user_equipments
 
@@ -166,8 +165,8 @@ def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accura
     equipment.lim_magnitude =lim_magnitude
     equipment.elevation_lim = elevation_lim
     equipment.mount_type = mount_type
-    equipment.camera_type1 = camera_type1
-    equipment.camera_type2 = camera_typew
+    equipment.camera_type1 = camera_type2
+    equipment.camera_type2 = camera_type1
     equipment.JohnsonB = JohsonB
     equipment.JohnsonR = JohsonR
     equipment.JohnsonV = JohsonV
@@ -204,16 +203,6 @@ def search_target(text: str):
     target = graph.run(query, text = text).data()
     return target
 
-def get_project_detail(PID: int):
-    #get the project's detial
-    query = "MATCH (n:project {PID: $PID})" \
-    " return n.title as title, n.project_type as project_type, n.PI as PI, n.description as description, n.aperture_upper_limit as aperture_upper_limit, n.aperture_lower_limit as aperture_lower_limit," \
-    "n.FoV_upper_limit as FoV_upper_limit, n.FoV_lower_limit as FoV_lower_limit, n.pixel_scale_upper_limit as pixel_scale_upper_limit, n.pixel_scale_lower_limit as pixel_scale_lower_limit," \
-    "n.mount_type as mount_type, n.camera_type1 as camera_type1, n.camera_type2 as camera_type2, n.JohnsonB as JohnsonB, n.JohnsonR as JohnsonR, n.JohnsonV as JohnsonV, n.SDSSu as SDSSu," \
-    "n.SDSSg as SDSSg, n.SDSSr as SDSSr, n.SDSSi as SDSSi, n.SDSSz as SDSSz, n.PID as PID"
-    project = graph.run(query, PID = PID).data()
-    return project
-
 def get_project(usr: str)->Optional[Project]:
     # this function will return project which user can join
     query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments) " \
@@ -228,30 +217,30 @@ def get_project(usr: str)->Optional[Project]:
     result = []
     for i in range(len(equipment)):
         for j in range(len(project)):
-            if apply_project_status(usr, project[j]['PID']) == 1:
-                if any(d['PID'] == project[j]['PID'] for d in result): continue
-                if equipment[i]['jb'] == 'n':
-                    if project[j]['JohnsonB'] == 'y': continue
-                if equipment[i]['jv'] == 'n':
-                    if project[j]['JohnsonV'] == 'y': continue
-                if equipment[i]['jr'] == 'n':
-                    if project[j]['JohnsonR'] == 'y': continue
-                if equipment[i]['su'] == 'n':
-                    if project[j]['SDSSu'] == 'y': continue
-                if equipment[i]['sg'] == 'n':
-                    if project[j]['SDSSg'] == 'y': continue
-                if equipment[i]['sr'] == 'n':
-                    if project[j]['SDSSr'] == 'y': continue
-                if equipment[i]['si'] == 'n':
-                    if project[j]['SDSSi'] == 'y': continue
-                if equipment[i]['sz'] == 'n':
-                    if project[j]['SDSSz'] == 'y': continue
-                if equipment[i]['mount_type'] != project[j]['mount_type']: continue
-                if equipment[i]['camera_type1'] != project[j]['camera_type1']: continue
-                if equipment[i]['camera_type2'] != project[j]['camera_type2']: continue
-                n = graph.run("MATCH (x:user{email: $usr}) return x.name as manager_name",usr = usr).data()
-                project[j]['manager_name'] = n[0]['manager_name']
-                result.append(project[j]) 
+            if project[j]['PID'] in result: continue
+            if equipment[i]['jb'] == 'n':
+                if project[j]['JohnsonB'] == 'y': continue
+            if equipment[i]['jv'] == 'n':
+                if project[j]['JohnsonV'] == 'y': continue
+            if equipment[i]['jr'] == 'n':
+                if project[j]['JohnsonR'] == 'y': continue
+            if equipment[i]['su'] == 'n':
+                if project[j]['SDSSu'] == 'y': continue
+            if equipment[i]['sg'] == 'n':
+                if project[j]['SDSSg'] == 'y': continue
+            if equipment[i]['sr'] == 'n':
+                if project[j]['SDSSr'] == 'y': continue
+            if equipment[i]['si'] == 'n':
+                if project[j]['SDSSi'] == 'y': continue
+            if equipment[i]['sz'] == 'n':
+                if project[j]['SDSSz'] == 'y': continue
+            if equipment[i]['mount_type'] != project[j]['mount_type']: continue
+            if equipment[i]['camera_type1'] != project[j]['camera_type1']: continue
+            if equipment[i]['camera_type2'] != project[j]['camera_type2']: continue
+            # print(project[j])
+            n = graph.run("MATCH (x:user{email: $usr}) return x.name as manager_name",usr = usr).data()
+            project[j]['manager_name'] = n[0]['manager_name']
+            result.append(project[j]) 
         #query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
         #"and n.JohnsonB=e.JohnsonB and n.JohnsonV=e.JohnsonV and n.JohnsonR=e.JohnsonR  and n.SDSSu=e.SDSSu  and n.SDSSg=e.SDSSg and n.SDSSr=e.SDSSr and n.SDSSi=e.SDSSi and n.SDSSz=e.SDSSz" \
         #" return n.title as title, n.project_type as project_type, n.PI as PI, n.description as description, n.aperture_upper_limit as aperture_upper_limit, n.aperture_lower_limit as aperture_lower_limit," \
@@ -259,12 +248,14 @@ def get_project(usr: str)->Optional[Project]:
         #"n.mount_type as mount_type, n.camera_type1 as camera_type1, n.camera_type2 as camera_type2, n.JohnsonB as JohnsonB, n.JohnsonR as JohnsonR, n.JohnsonV as JohnsonV, n.SDSSu as SDSSu," \
         #"n.SDSSg as SDSSg, n.SDSSr as SDSSr, n.SDSSi as SDSSi, n.SDSSz as SDSSz, n.PID as PID ORDER BY n.PID"
     #project = graph.run(query, usr = usr).data()
+    # print(result)
     return result
 
 def get_project_target(pid: int):
     query = "MATCH x=(p:project{PID:$pid})-[r:PHaveT]->(t:target) RETURN t.name as name"
     project_target = graph.run(query, pid=pid).data()
     return project_target
+
     
 def create_project(usr: str,title: str,project_type: str,description: str,aperture_upper_limit: float,aperture_lower_limit: float,FoV_upper_limit: float,
         FoV_lower_limit: float,pixel_scale_upper_limit: float,pixel_scale_lower_limit: float,mount_type: str,camera_type1: str,camera_type2: str,JohnsonB: str,
@@ -358,17 +349,15 @@ def user_manage_projects_get(usr: str):
     return project
 
 def create_project_target(usr: str, PID: int, TID: int, JohnsonB: str, JohnsonR: str, JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz: str):
-    query="MATCH (p:project {PID: $PID}) MATCH (t:target {TID:$TID}) create (p)-[pht:PHaveT" \
-        " {phavetid:$phavetid, JohnsonB:$JohnsonB, JohnsonV:$JohnsonV, JohnsonR:$JohnsonR, SDSSu:$SDSSu, SDSSg:$SDSSg, SDSSr:$SDSSr, SDSSi:$SDSSi, SDSSz:$SDSSz}]->(t) return pht.phavetid "
+    query="MATCH (p:project {PID: $PID}) MATCH (t:target {TID:$TID}) create p-[pht:PHaveT" \
+        " {phavetid:$phavetid, JohnsonB:$JohnsonB, JohnsonV:$JohnsonV, JohnsonR:$JohnsonR, SDSSu:$SDSSu, SDSSg:$SDSSg, SDSSr:$SDSSr, SDSSi:$SDSSi, SDSSz:$SDSSz}]->t"
     
-    count = graph.run("MATCH ()-[pht:PHaveT]->() return pht.phavetid  order by pht.phavetid DESC limit 1 ").data()
+    count = graph.run("MATCH ()-[pht:PHAveT]->() return pht.phavetid  order by pht.phaveid DESC limit 1 ").data()
     if len(count) == 0:
         cnt = 0
     else:
         cnt = count[0]['pht.phavetid']+1
-    print(cnt)
-    result = graph.run(query, PID = PID, TID = TID, phavetid = cnt, JohnsonB = JohnsonB, JohnsonR = JohnsonR, JohnsonV = JohnsonV, SDSSg = SDSSg, SDSSi = SDSSi, SDSSr = SDSSr, SDSSu = SDSSu, SDSSz = SDSSz).data()
-    return result
+    graph.run(query, PID = PID, TID = TID, phavetid = cnt, JohnsonB = JohnsonB, JohnsonR = JohnsonR, JohnsonV = JohnsonV, SDSSg = SDSSg, SDSSi = SDSSi, SDSSr = SDSSr, SDSSu = SDSSu, SDSSz = SDSSz)
 
 def auto_join(usr: str,PID: int):
     query = "MATCH (x:user {email:$usr}) MATCH (p:project {PID:$PID})  create (x)-[:Member_of {memberofid: $memberofid, join_time: $join_time}]->(p)"
@@ -403,6 +392,7 @@ def apply_project_status(usr: str, PID: int)->int:
     # 1 : no 
     # 2 : yes, waiting
     # 3 : yes, already join
+    print(PID)
     query = "MATCH (x:user {email:$usr})-[rel:Apply_to]->(p:project {PID:$PID}) return rel.status "
     result = graph.run(query, usr = usr, PID = PID).data()
     
@@ -450,19 +440,76 @@ def accept_join_project(usr: str, PID: int, UID: int, applyid: int):
     query = "MATCH (x:user {email: $UID})-[rel:Apply_to {applyid: $applyid}]->(p:project {PID: $PID}) SET rel.status = $status return  rel.status as status"
     result = graph.run(query, status = 'accept', PID = PID, UID = UID, applyid = applyid).data()
     if len(result) == 1  and result[0]['status'] == 'accept':
+<<<<<<< HEAD
         
         query = "CREATE (x:user {email: $UID})-[rel: Member_of {memberofid: $memberofid, join_time: $time}]->(p:project {PID: $PID})"
         count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofid  order by rel.memberofid DESC limit 1 ").data()
         time = graph.run("return datetime() as time").data() 
+=======
+        # create user-project relationship
+        query = "CREATE (x:user {email: $UID})-[rel: Member_of {memberofid: $memberofid}]->(p:project {PID: $PID})"
+        count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofid order by rel.memberofid DESC limit 1 ").data()
+>>>>>>> main
         if len(count) == 0:
             cnt = 0
         else:
             cnt = count[0]['rel.memberofid']+1
-        graph.run(query, UID = UID, PID =PID, memberofid = cnt, time = time[0]['time'])
+        graph.run(query, UID = UID, PID =PID, memberofid = cnt)
+
+        # create equipment-project relationship
+        qualified_eid_list = get_qualified_equipment(UID, PID)
+        query = "CREATE (p:project {PID:$PID})-[rel:PhaveE {phaveeid:$phaveeid}]->(e:equipments {EID:$EID})"
+
+        for i in range(len(qualified_eid_list)):
+            count = graph.run("MATCH ()-[rel:PhaveE]->() return rel.phaveeid order by rel.phaveeid DESC limit 1").data()
+            if len(count) == 0:
+                cnt = 0
+            else:
+                cnt = count[0]['rel.phaveeid']+1
+            graph.run(query, PID=PID, EID=qualified_eid_list[i], phaveeid=cnt)
+
         return 1
     else:
         return 0
 
+
+def get_qualified_equipment(UID: int, PID: int):
+    query_eid = "MATCH (x:user{UID:$UID})-[r:UhaveE]->(e:equipments) RETURN e.EID as EID, e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz, r.declination_limit as declination"
+    equipment = graph.run(query_eid, UID=UID).data()
+
+    project_target = graph.run("MATCH (p:project {PID: $PID})-[pht:PHaveT]->(t:target) " \
+        " return pht.JohnsonB as JohnsonB, pht.JohnsonV as JohnsonV, pht.JohnsonR as JohnsonR, pht.SDSSu as SDSSu, pht.SDSSg as SDSSg, pht.SDSSr as SDSSr , pht.SDSSi as SDSSi, pht.SDSSz as SDSSz"
+    ", t.TID as TID, t.name as name, t.latitude as dec", PID=PID).data()
+    
+    qualified_eid_list = []
+    for i in range(len(equipment)):
+        for j in range(len(project_target)):
+            if equipment[i]['jb'] == 'n':
+                if project_target[j]['JohnsonB'] == 'y': continue
+            if equipment[i]['jv'] == 'n':
+                if project_target[j]['JohnsonV'] == 'y': continue
+            if equipment[i]['jr'] == 'n':
+                if project_target[j]['JohnsonR'] == 'y': continue
+            if equipment[i]['su'] == 'n':
+                if project_target[j]['SDSSu'] == 'y': continue
+            if equipment[i]['sg'] == 'n':
+                if project_target[j]['SDSSg'] == 'y': continue
+            if equipment[i]['sr'] == 'n':
+                if project_target[j]['SDSSr'] == 'y': continue
+            if equipment[i]['si'] == 'n':
+                if project_target[j]['SDSSi'] == 'y': continue
+            if equipment[i]['sz'] == 'n':
+                if project_target[j]['SDSSz'] == 'y': continue
+            # filter with equipment declination limit
+            if float(equipment[i]['declination']) <= 0 and float(project_target[j]['dec']) < float(equipment[i]['declination']):
+                continue
+            if float(equipment[i]['declination']) > 0 and float(project_target[j]['dec']) > float(equipment[i]['declination']):
+                continue
+
+            qualified_eid_list.append(int(equipment[i]['EID']))
+            break
+
+    return qualified_eid_list
 
 
 def get_project_member(usr: str, PID: int):
@@ -477,46 +524,9 @@ def get_project_join(usr: str):
     join_list = graph.run(query, usr = usr).data()
     return  join_list
 
-def get_project_join_filter(projectlist: list,usr: str,uhaveid: int):
-
-    print(uhaveid)
-    equipment = graph.run("MATCH (x:user{email: $usr})-[:UhaveE{uhaveid:$uhaveid}]->(e:equipments) " \
-        " return e.EID as EID,e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz" \
-        ",e.mount_type as mount_type, e.camera_type1 as camera_type1, e.camera_type2 as camera_type2" ,usr = usr , uhaveid = uhaveid).data()
-    print(equipment) 
-    result = []
-    for j in range(len(projectlist)):
-            if projectlist[j]['PID'] in result: continue
-            
-            p = get_project_detail(projectlist[j]['PID'])
-            
-            if equipment[0]['jb'] == 'n':
-                if p[0]['JohnsonB'] == 'y': continue
-            if equipment[0]['jv'] == 'n':
-                if p[0]['JohnsonV'] == 'y': continue
-            if equipment[0]['jr'] == 'n':
-                if p[0]['JohnsonR'] == 'y': continue
-            if equipment[0]['su'] == 'n':
-                if p[0]['SDSSu'] == 'y': continue
-            if equipment[0]['sg'] == 'n':
-                if p[0]['SDSSg'] == 'y': continue
-            if equipment[0]['sr'] == 'n':
-                if p[0]['SDSSr'] == 'y': continue
-            if equipment[0]['si'] == 'n':
-                if p[0]['SDSSi'] == 'y': continue
-            if equipment[0]['sz'] == 'n':
-                if p[0]['SDSSz'] == 'y': continue
-            if equipment[0]['mount_type'] != p[0]['mount_type']: continue
-            if equipment[0]['camera_type1'] != p[0]['camera_type1']: continue
-            if equipment[0]['camera_type2'] != p[0]['camera_type2']: continue
-            result.append(projectlist[j])
-
-    return result
-
-
 def fliter_project_target(usr: str, PID: int):
     #return the target based on user's equipment 
-    query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments) " \
+    query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments)" \
         " return e.EID as EID,e.mount_type as mount_type, e.camera_type1 as camera_type1, e.camera_type2 as camera_type2,e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz, rel.declination_limit as declination"
     equipment = graph.run(query, usr = usr).data()
     #query = "MATCH (x:user {email:$usr})-[rel:UhaveE]->(e:equipments), (n:project {PID: $PID}) where n.mount_type=e.mount_type and n.camera_type1=e.camera_type1 and n.camera_type2=e.camera_type2 " \
@@ -590,7 +600,7 @@ def create_schedule(eid: int, uhaveid: int):
 
     graph.run(query, EID=eid, SID=schedule.SID, ehavesid=cnt)
 
-    # return schedule
+    return schedule.SID
 
 
 def load_schedule(uhaveid: int):
@@ -601,7 +611,11 @@ def load_schedule(uhaveid: int):
     query_count_schedule = "MATCH (e:equipments{EID:$EID})-[r:EhaveS]->(s:schedule) RETURN count(r) as cnt"
     result_count = graph.run(query_count_schedule, EID=EID).data()
     if result_count[0]['cnt'] == 0:
-        create_schedule(EID, uhaveid)
+        SID = create_schedule(EID, uhaveid)
+    else:
+        query_sid = "match (e:equipments{EID:$EID})-[r:EhaveS]->(s:schedule) return s.SID as SID"
+        sid = graph.run(query_sid, EID=EID).data()
+        SID = sid[0]['SID']
 
     # get nighttime
     new_observe_section, current_time = get_night_time(uhaveid)
@@ -629,12 +643,13 @@ def load_schedule(uhaveid: int):
                 updated_schedule[i] = new_observe_section[i]
 
     # return the new calculated schedule to front-end
-    return updated_schedule
+    return updated_schedule, str(current_time), SID
 
 
+def save_schedule(SID: int, last_update: str, observe_section: list):
+    query_save_schedule = "match (s:schedule{SID:$SID}) set s.last_update=$last_update, s.observe_section=$observe_section"
 
-def save_schedule(usr: str):
-    pass
+    graph.run(query_save_schedule, SID=SID, last_update=last_update, observe_section=observe_section)
 
 
 def get_eid(uhaveid):
@@ -646,9 +661,10 @@ def get_eid(uhaveid):
     return eid
 
 
-def get_observable_time(usr: str, uhaveid: int, tid_list: list):
+def get_observable_time(usr: str, uhaveid: int, tid_list):
     # hour array
     hour = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"]
+
     # get current time for further calculation
     current_time = datetime.now().replace(microsecond=0, second=0, minute=0) + timedelta(hours=1)
     current_time_sec = str(current_time).split('.')[0]
@@ -684,7 +700,7 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
         observe = [0]*24
 
         query_target = "match (t:target) where t.TID=$tid return t.TID as TID, t.name as name, t.longitude as ra, t.latitude as dec"
-        tar_info = graph.run(query_target, tid=tid_list[i]['TID']).data()
+        tar_info = graph.run(query_target, tid=tid_list[i]).data()
 
         tid = int(tar_info[0]['TID'])
         ra = float(tar_info[0]['ra'])
@@ -692,7 +708,7 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
         name = str(tar_info[0]['name'])
 
         t_start, t_end = schedule.run(uhaveid, longitude, latitude, altitude, elevation_lim, tid, ra, dec, current_time)
-        #print('start observation: %s \nend observation %s' % (t_start, t_end))
+        # print('start observation: %s \nend observation %s' % (t_start, t_end))
 
         if str(t_start) != 'nan' and str(t_end)  != 'nan':
             t1 = str(t_start).split('.')[0].replace("T", " ")
@@ -708,13 +724,13 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
             for j in range(24):
                 if j >= o1-1 and j < o2:
                     observe[j] = 1
-            t_data = {'TID':tid_list[i]['TID'], 'name':name, 'start':t1.split(" ")[1], 'end':t2.split(" ")[1], 'time_section':observe, 'hour':current_hour_array}
-        #else:
-            #observe = [0]*24
-            #t_data = {'TID':tid_list[i], 'name':name, 'start':str(t_start), 'end':str(t_end), 'time_section':observe, 'hour':current_hour_array}
+            t_data = {'TID':tid_list[i], 'name':name, 'start':t1.split(" ")[1], 'end':t2.split(" ")[1], 'time_section':observe, 'hour':current_hour_array}
+        else:
+            observe = [0]*24
+            t_data = {'TID':tid_list[i], 'name':name, 'start':str(t_start), 'end':str(t_end), 'time_section':observe, 'hour':current_hour_array}
 
-            target_data.append(t_data)
-        #print(t_data)
+        target_data.append(t_data)
+        print(t_data)
 
     return target_data
 

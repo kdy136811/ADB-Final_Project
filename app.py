@@ -3,8 +3,6 @@ from data.db_session import db_auth
 #from services.accounts_service import create_user, login_user, get_profile, update_profile
 from services.accounts_service import *
 import os
-from os import path
-import ast
 
 app = Flask(__name__) #create application
 app.secret_key = os.urandom(24) 
@@ -232,7 +230,6 @@ def project_post():
         session["usr"] = usr
         if request.form.get('button') == 'Detail':
             # project_target = get_project_target(int(hid))
-            create_project_target(usr,0,0,'y','y','y','y','y','y','y','y')
             project_target = fliter_project_target(usr, int(hid))
             return render_template("projects/project_target.html", project_target = project_target)
         elif request.form.get('button') == 'Create':
@@ -329,148 +326,12 @@ def schedule_get():
         return redirect(url_for("login_get"))
 
 @app.route('/schedule/schedule', methods=['POST'])
-def schedule_create_post():
+def schedule_create_get():
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
         user_equipments = get_user_equipments(usr)
-        if request.form.get('button') == "Choose":
-            uhaveid = request.form.get('uhaveid').strip()
-            # load_schedule(int(uhaveid))  #get SID from this function,and pass down
-            return redirect(url_for("schedule_choose_project_get", uhaveid  = int(uhaveid))) #pass SID
         return render_template("schedule/schedule_create.html", user_equipments = user_equipments)
-    else:
-        return redirect(url_for("login_get"))
-
-@app.route('/schedule/schedule_choose_project', methods=['GET'])
-def schedule_choose_project_get():
-    if "usr" in session:
-        usr = session["usr"]
-        session["usr"] = usr
-        join_list = get_project_join(usr)  # retrun the project which user joined
-        project_list = get_project_join_filter(join_list,usr,int(request.args.get('uhaveid'))) #return the project satisify requirement 
-        return render_template("schedule/schedule_choose_project.html", project_list = project_list)
-    else:
-        return redirect(url_for("login_get"))
-
-@app.route('/schedule/schedule_choose_project', methods=['POST'])
-def schedule_choose_project_post():
-    if "usr" in session:
-        usr = session["usr"]
-        session["usr"] = usr
-        if request.form.get('button') == 'Show':  #show the target observe time of this project
-            PID = request.form.get('PID').strip()
-            uhaveid = request.args.get('uhaveid')
-            return redirect(url_for("schedule_show_target_get", PID = int(PID), uhaveid = int(uhaveid))) #pass SID
-    else:
-        return redirect(url_for("login_get"))
-
-@app.route('/schedule/schedule_show_target', methods=['GET'])
-def schedule_show_target_get():
-    if "usr" in session:
-        usr = session["usr"]
-        session["usr"] = usr
-        uhaveid = request.args.get('uhaveid')
-        pid = request.args.get('PID')
-        target_list = fliter_project_target(usr,int(pid))
-        target_oberve_time = get_observable_time(usr,int(uhaveid),target_list)
-        return render_template("schedule/schedule_show_target.html", target_observe_time = target_oberve_time)
-    else:
-        return redirect(url_for("login_get"))
-
-@app.route('/schedule/schedule_show_target', methods=['POST'])
-def schedule_show_target_post():
-    if "usr" in session:
-        usr = session["usr"]
-        session["usr"] = usr
-        uhaveid = request.args.get('uhaveid')
-        pid = request.args.get('PID')
-        #sid = request.args.get('SID')
-        target_list = fliter_project_target(usr,int(pid))
-        target_oberve_time = get_observable_time(usr,int(uhaveid),target_list)
-        # target list
-        filename = 'schedule_tmp_'+str(uhaveid)
-        if path.exists(filename): #if there is existing schedule_tmp file, then read the current schedule
-            tmp = open(filename,'r')
-            schedule = tmp.read()
-            schedule = ast.literal_eval(p)
-            tmp.close()
-        else:
-            schedule = None
-        if request.form.get('button') == 'add':  # add a new target into the schedule
-            section = request.form.get('time_section').strip()
-            name = request.form.get('name').strip()
-            tid = request.form.get('TID').strip()
-            section = ast.literal_eval(section)
-            if path.exists(filename):
-                print('exist')
-                tmp = open(filename,'r')
-                data = tmp.read()
-                data = ast.literal_eval(data)
-                tmp.close()
-                tmp = open(filename,'w')
-                time_section = [0]*24
-                tmp_list = []
-                tmp_dict = {}
-                for i in range(0,24):
-                    if(section[i]==1): time_section[i] = int(tid)
-                tmp_dict['TID'] =  int(tid)
-                tmp_dict['name'] = name
-                tmp_dict['time_section'] = time_section
-                data.append(tmp_dict) 
-                tmp.write(str(data))
-                tmp.close()
-            else:
-                print('new')
-                tmp = open(filename,'w')
-                time_section = [0]*24
-                tmp_list = []
-                tmp_dict = {}
-                for i in range(0,24):
-                    if section[i] == 1 : time_section[i] = int(tid)
-                tmp_dict['TID'] =  int(tid)
-                tmp_dict['name'] = name
-                tmp_dict['time_section'] = time_section
-                tmp_list.append(tmp_dict)
-                print(tmp_list)
-                tmp.write(str(tmp_list))
-                tmp.close()
-        if request.form.get('button') == 'update': # update the target time section which already in target table 
-            tmp = open(filename,'r')
-            data = tmp.read()
-            data = ast.literal_eval(data)
-            tmp.close()
-            tmp = open(filename,'w')
-            for i in range(len(data)):
-                if data[i]['TID'] == TID:
-                    break
-            for i in range(0,24):
-                if section[i] == 1 : time_section[i] = int(tid)
-                if section[i] == 0 : time_section[i] = 0
-            tmp.write(str(data))
-            tmp.close()
-        #if request.form.get('button') == 'delete': # delete a target from current schedule
-        if request.form.get('button') == 'save':  # save the schedule into schedule node, and delete the schedule_tmp file
-            tmp = open('schedule_tmp','r')
-            data = tmp.read()
-            data = ast.literal_eval(data)
-            tmp.close()
-            tmp_list = []
-            for i in range(len(data)):
-                tmp_list.append(data[i]['tmie_section'])
-           
-            # handle the error of conflict time section 
-            #for i in range(0,24):
-            #    flag = 0
-            #    for j in range(len(data)):
-            #        flag += int(data[j]['time_section'][i])
-            #        if flag > 1 :
-            #            return error_handle_page
-                        
-            now = datetime.now()
-            #save_schedule(sid,now,data) 
-            os.remove("schedule_tmp")
-        return render_template("schedule/schedule_show_target.html", target_observe_time = target_oberve_time, schedule = schedule)
     else:
         return redirect(url_for("login_get"))
 # @app.route('/projects/project', methods=['POST'])

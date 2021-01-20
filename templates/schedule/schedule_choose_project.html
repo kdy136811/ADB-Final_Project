@@ -8,13 +8,16 @@
             <h2>Project</h2>
             <input class="form-control" type="hidden" name='PID' >
         </form>      
-                <h2>Choose project</h2>
+            {% for info in projects %}
+                <h4>project {{loop.index}}</h4>
                 <form method="post">
-                    <input list="project_list" class="form-control" type="text">
-                    <datalist id="project_list">
-                    </datalist>
+                    <input class="form-control" type="hidden" name='PID' value="{{info.PID}}">
+                    <input class="form-control" type="text" name="title" value="{{info.title}}" >
+                <div class="actions">
+                    <button name="button" type="submit" class="bt btn-info btn-sm" value="Choose">Join</button>
                 </div>
                 </form>
+                {% endfor%}
     </div>
 </div>
 {% endblock %}
