@@ -132,7 +132,6 @@ def delete_user_equipment(usr: str,uhaveid: int):
 def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accuracy:float,lim_magnitude:float,elevation_lim:float,mount_type:str,camera_type1:str,camera_type2:str,JohsonB:str,JohsonR:str,JohsonV:str,SDSSu:str,SDSSg:str,SDSSr:str,SDSSi:str,SDSSz:str)->Optional[Equipments]:
     # create an equipment
     count = graph.run("MATCH (e:equipments) return e.EID  order by e.EID DESC limit 1 ").data()
-
     equipment = Equipments()
     if len(count) == 0:
         equipment.EID = 0
@@ -145,8 +144,8 @@ def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accura
     equipment.lim_magnitude =lim_magnitude
     equipment.elevation_lim = elevation_lim
     equipment.mount_type = mount_type
-    equipment.camera_type1 = camera_type2
-    equipment.camera_type2 = camera_type1
+    equipment.camera_type1 = camera_type1
+    equipment.camera_type2 = camera_type2
     equipment.JohnsonB = JohsonB
     equipment.JohnsonR = JohsonR
     equipment.JohnsonV = JohsonV
@@ -176,6 +175,12 @@ def get_target():
     # "MATCH(t:target) where t.tid>100 return t.name as name order by t.TID limit 100"
     target = graph.run(query)
     return target
+
+def get_targetDetails(targetName: str):
+    query = "MATCH(t:target{name:$name}) return t.longitude as ra, t.latitude as dec, t.TID as TID"
+
+    targetDetails = graph.run(query, name=targetName).data()
+    return targetDetails
 
 def search_target(text: str):
 
@@ -288,17 +293,21 @@ def user_manage_projects_get(usr: str):
     return project
 
 def create_project_target(usr: str, PID: int, TID: int, JohnsonB: str, JohnsonR: str, JohnsonV: str,SDSSu: str,SDSSg: str,SDSSr: str,SDSSi: str,SDSSz: str):
-
-    query="MATCH (p:project {PID: $PID}) MATCH (t:target {TID:$TID}) create p-[pht:PHaveT" \
-        " {phavetid:$phavetid, JohnsonB:$JohnsonB, JohnsonV:$JohnsonV, JohnsonR:$JohnsonR, SDSSu:$SDSSu, SDSSg:$SDSSg, SDSSr:$SDSSr, SDSSi:$SDSSi, SDSSz:$SDSSz}]->t"
-    
-    count = graph.run("MATCH ()-[pht:PHAveT]->() return pht.phavetid  order by pht.phaveid DESC limit 1 ").data()
+    print("creating target rel")
+    print(PID)
+    print(TID)
+    print(JohnsonB)
+    query="MATCH (p:project {PID: $PID}) MATCH (t:target {TID:$TID}) create (p)-[pht:PHaveT {phavetid:$phavetid, JohnsonB:$JohnsonB, JohnsonV:$JohnsonV, JohnsonR:$JohnsonR, SDSSu:$SDSSu, SDSSg:$SDSSg, SDSSr:$SDSSr, SDSSi:$SDSSi, SDSSz:$SDSSz}]->(t) return pht.phavetid"
+    #query="MATCH (p:project {PID: 1031}) MATCH (t:target {TID:1706}) create (p)-[pht:PHaveT {phavetid:1000003}]->(t) return pht,p,t"
+    count = graph.run("MATCH ()-[pht:PHaveT]->() return pht.phavetid  order by pht.phavetid DESC limit 1 ").data()
     if len(count) == 0:
         cnt = 0
     else:
         cnt = count[0]['pht.phavetid']+1
-    graph.run(query, PID = PID, TID = TID, phavetid = cnt, JohnsonB = JohnsonB, JohnsonR = JohnsonR, JohnsonV = JohnsonV, SDSSg = SDSSg, SDSSi = SDSSi, SDSSr = SDSSr, SDSSu = SDSSu, SDSSz = SDSSz)
-
+    print(cnt)
+    result = graph.run(query, PID = PID, TID = TID, phavetid = cnt, JohnsonB = JohnsonB, JohnsonR = JohnsonR, JohnsonV = JohnsonV, SDSSg = SDSSg, SDSSi = SDSSi, SDSSr = SDSSr, SDSSu = SDSSu, SDSSz = SDSSz).data()
+    print(result)
+    return result
 def apply_project(usr: str,PID: int)->int:
     # this function will create an apply_to relationship to the project
     # return value

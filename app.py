@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, session, url_for, flash, request
+from flask import Flask, render_template, redirect, session, url_for, flash, request, jsonify
 from data.db_session import db_auth
 #from services.accounts_service import create_user, login_user, get_profile, update_profile
 from services.accounts_service import *
@@ -34,7 +34,7 @@ def register_post():
 
     # Check for blank fields in the registration form
     if not username or not name or not email or not affiliation or not title  or not country or not password or not confirm:
-        flash("Please populate all the registration fields", "error")
+        flash("Please populate all the registration fields"+country, "error")
         return render_template("accounts/register.html", username=username, name=name, email=email, affiliation=affiliation, title=title, country=country, password=password, confirm=confirm)
 
     # Check if password and confirm match
@@ -49,14 +49,13 @@ def register_post():
         flash("A user with that email already exists.")
         return render_template("accounts/register.html", username=username, name=name, email=email, affiliation=affiliation, title=title, country=country)
 
-    return redirect(url_for("profile_get"))
-
+    return redirect(url_for("dashboard_get"))
 
 @app.route('/accounts/login', methods=['GET'])
 def login_get():
     # Check if the user is already logged in.  if yes, redirect to profile page.
     if "usr" in session:
-        return redirect(url_for("profile_get"))
+        return redirect(url_for("dashboard_get"))
     else:
         return render_template("accounts/login.html")
 
@@ -78,7 +77,51 @@ def login_post():
     # Log in user and create a user session, redirect to user profile page.
     usr = request.form["email"]
     session["usr"] = usr
-    return redirect(url_for("profile_get"))
+    return redirect(url_for("dashboard_get"))
+
+@app.route('/accounts/index', methods=['GET'])
+def dashboard_get():
+    # Make sure the user has an active session.  If not, redirect to the login page.
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        user_profile = get_profile(usr)
+        projects = get_project(usr)
+        return render_template("accounts/index.html", user_profile=user_profile, projects = projects)
+    else:
+        return redirect(url_for("login_get"))
+
+#created for ajax to join project for project on dashboard
+@app.route('/joinProject', methods=['POST'])
+def joinProject():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        PID = request.form.get('PID').strip()
+        flag = apply_project_status(usr,int(PID))
+        if flag == 1:
+            apply_project(usr,int(PID))
+            return jsonify(success = "Successfully requested to join the project.")
+        return jsonify(error = "Already asked to join")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/manageprojects', methods=['GET'])
+def manageProject():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        user_profile = get_profile(usr)
+        return render_template("accounts/manageprojects.html", user_profile=user_profile)
+    else:
+        return redirect(url_for("login_get"))
+
+#created for ajax to get target for project on dashboard
+@app.route('/getTargetInfo', methods=['POST'])
+def getTargetInfo():
+    hid = request.form.get('PID').strip()
+    project_target = get_project_target(int(hid))
+    return jsonify(project_targets = project_target)
 
 
 @app.route('/accounts/profile', methods=['GET'])
@@ -88,7 +131,7 @@ def profile_get():
         usr = session["usr"]
         session["usr"] = usr
         user_profile = get_profile(usr)
-        return render_template("accounts/index.html", user_profile=user_profile)
+        return render_template("accounts/profile.html", user_profile=user_profile)
     else:
         return redirect(url_for("login_get"))
 
@@ -107,9 +150,22 @@ def profile_post():
         session["usr"] = usr
         user_profile = update_profile(usr, username, name, affiliation, title, country)
         user_profile = get_profile(usr)
-        return render_template("accounts/index.html", user_profile=user_profile)
+        return render_template("accounts/profile.html", user_profile=user_profile)
     else:
         return redirect(url_for("login_get"))
+
+@app.route('/accounts/createProject', methods=['GET'])
+def createProj_get():
+    # Make sure the user has an active session.  If not, redirect to the login page.
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        user_profile = get_profile(usr)
+        projects = get_project(usr)
+        return render_template("accounts/createProject.html", user_profile=user_profile, projects = projects)
+    else:
+        return redirect(url_for("login_get"))
+
 
 @app.route('/accounts/equipments', methods=['GET'])
 def equipments_get():
@@ -118,7 +174,7 @@ def equipments_get():
         session["usr"] = usr
         count = count_user_equipment(usr)
         if count == 0:
-            flash("Don't have any equipment yet! Please add a equipment first", "error")
+            flash("You don't have any equipment yet! Please add an equipment first", "error")
             return render_template("accounts/equipments.html", user_equipments = None)
         user_equipments = get_user_equipments(usr)
         return render_template("accounts/equipments.html", user_equipments = user_equipments)
@@ -155,21 +211,23 @@ def equipments_post():
     SDSSr = request.form.get('SDSSr').strip()
     SDSSi = request.form.get('SDSSi').strip()
     SDSSz = request.form.get('SDSSz').strip()
-    hid = request.form.get('uhaveid').strip() 
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
-        if request.form.get('button') == 'update':
+        if request.form.get('button') == 'update':            
+            hid = request.form.get('uhaveid').strip() 
             print(hid)
             user_equipments = update_user_equipments(aperture,Fov,pixel_scale,tracking_accuracy,lim_magnitude,elevation_lim,mount_type,camera_type1,
             camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz,
             usr,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution,int(hid))
         if request.form.get('button') == 'add':
+
             equipments = create_equipments(aperture,Fov,pixel_scale,tracking_accuracy,lim_magnitude,elevation_lim,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
             print(equipments.EID)
             user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution)
             #print('add')
-        if request.form.get('button') == 'delete':
+        if request.form.get('button') == 'delete':            
+            hid = request.form.get('uhaveid').strip() 
             delete_user_equipment(usr,int(hid))
         user_equipments = get_user_equipments(usr)
         return render_template("accounts/equipments.html", user_equipments = user_equipments)
@@ -203,12 +261,19 @@ def target_search_get():
 
 @app.route('/projects/search', methods=['POST'])
 def target_search_post():
-    text = request.form.get('Search').strip()
+    text = request.form.get('search').strip()
     text = '(?i).*'+text+'.*'
     print(text)
-    if request.form.get('button') == 'Search':
-        target = search_target(text)
-    return render_template("projects/search_target.html", target = target)
+    #if request.form.get('button') == 'Search':
+    target = search_target(text)
+    #return render_template("projects/search_target.html", target = target)
+    return jsonify(target = target)
+
+@app.route('/projects/targetDetails', methods=['POST'])
+def target_getDetails():
+        name = request.form.get('targetName')
+        target = get_targetDetails(name)
+        return jsonify(targetDetails = target)
 
 
 @app.route('/projects/project', methods=['GET'])
@@ -274,9 +339,8 @@ def project_create_get():
     else:
         return redirect(url_for("login_get"))
 
-@app.route('/projects/project_create', methods=['POST'])
-def project_create_post():
-    
+@app.route('/accounts/createProject', methods=['POST'])
+def project_create_post():    
     title = request.form.get('title').strip()
     project_type = request.form.get('project_type').strip()
     description = request.form.get('description').strip()
@@ -297,21 +361,41 @@ def project_create_post():
     SDSSr = request.form.get('SDSSr').strip()
     SDSSi = request.form.get('SDSSi').strip()
     SDSSz = request.form.get('SDSSz').strip()
-    PID = request.form.get('PID').strip()
-    PI = request.form.get('PI').strip()
-    umanageid = request.form.get('umanageid').strip()
+    # PID = request.form.get('PID').strip()
+    # PI = request.form.get('PI').strip()
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
-        if request.form.get('button') == 'Create':
-            print('create project')
-            projects = create_project(usr,title,project_type,description,aperture_upper_limit,aperture_lower_limit,FoV_upper_limit,FoV_lower_limit,pixel_scale_upper_limit,pixel_scale_lower_limit,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
-        if request.form.get('button') == 'Update':
-            projects = upadte_project(usr,int(PID),int(umanageid),title,project_type,description,aperture_upper_limit,aperture_lower_limit,FoV_upper_limit,FoV_lower_limit,pixel_scale_upper_limit,pixel_scale_lower_limit,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
-        if request.form.get('button') == 'Delete':
-            delete_project(usr,int(PID),int(umanageid))
-        projects = user_manage_projects_get(usr)
-        return render_template("projects/project_create.html", projects = projects)
+        #if request.form.get('button') == 'Create':
+        print('create project')
+        projects = create_project(usr,title,project_type,description,aperture_upper_limit,aperture_lower_limit,FoV_upper_limit,FoV_lower_limit,pixel_scale_upper_limit,pixel_scale_lower_limit,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
+        # if request.form.get('button') == 'Update':
+        #     umanageid = request.form.get('umanageid').strip()
+        #     projects = upadte_project(usr,int(PID),int(umanageid),title,project_type,description,aperture_upper_limit,aperture_lower_limit,FoV_upper_limit,FoV_lower_limit,pixel_scale_upper_limit,pixel_scale_lower_limit,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
+        # if request.form.get('button') == 'Delete':            
+        #     umanageid = request.form.get('umanageid').strip()
+        #     delete_project(usr,int(PID),int(umanageid))
+        # projects = user_manage_projects_get(usr)
+        return jsonify(projects = projects.PID)
+    else:
+        return redirect(url_for("login_get"))
+@app.route('/projects/addTarget', methods=['POST'])
+def addTarget():
+    PID = request.form.get('PID').strip()
+    TID = request.form.get('TID').strip()
+    JohnsonB = request.form.get('JohnsonB').strip()
+    JohnsonV = request.form.get('JohnsonV').strip()
+    JohnsonR = request.form.get('JohnsonR').strip()
+    SDSSu = request.form.get('SDSSu').strip()
+    SDSSg = request.form.get('SDSSg').strip()
+    SDSSr = request.form.get('SDSSr').strip()
+    SDSSi = request.form.get('SDSSi').strip()
+    SDSSz = request.form.get('SDSSz').strip()
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        target  = create_project_target(usr,int(PID),int(TID),JohnsonB, JohnsonR, JohnsonV, SDSSu, SDSSg, SDSSr, SDSSi, SDSSz)
+        return jsonify(target = target)
     else:
         return redirect(url_for("login_get"))
 

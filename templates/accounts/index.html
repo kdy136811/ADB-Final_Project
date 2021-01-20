@@ -1,23 +1,461 @@
 {% extends "shared/_layout.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}Dashboard{% endblock %}
+{% block header %}
+<form action="#" class="t-header-search-box">
+    <div class="input-group">
+      <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="Search" autocomplete="off">
+      <button class="btn btn-primary" type="submit"><i class="mdi mdi-arrow-right-thick"></i></button>
+    </div>
+  </form>
+{% endblock %}
 {% block main_content %}
+<div class="sidebar">
+  <div class="user-profile">
+  {% for info in user_profile %}
+    <div class="display-avatar animated-avatar">
+      <img class="profile-img img-lg rounded-circle" src="/static/assets/images/profile/female/image_5.png" alt="profile image">
+    </div>
+    <div class="info-wrapper">
+      <p class="user-name">{{info.name}}</p>
+      <h6 class="user-title">{{info.title}}</h6>
+    </div>
+  {% endfor %}
+  </div>
+  <ul class="navigation-menu">
+    <li>
+      <a href="/accounts/index">
+        <span class="link-title">Dashboard</span>
+        <i class="mdi mdi-gauge link-icon"></i>
+      </a>
+    </li>
+    <li>
+      <a href="/accounts/equipments">
+        <span class="link-title">Equipment</span>
+        <i class="mdi mdi-rocket link-icon"></i>
+      </a>
+    </li>
+    <li>
+      <li>
+        <a href="#projects" data-toggle="collapse" aria-expanded="false">
+          <span class="link-title">Projects</span>
+          <i class="mdi mdi-presentation link-icon"></i>
+        </a>
+        <ul class="collapse navigation-submenu" id="projects">
+          <li>
+            <a href="/accounts/projects">Joined Projects</a>
+          </li>
+          <li>
+            <a href="/accounts/createProject">Create Projects</a>
+          </li>
+          <li>
+            <a href="/accounts/manageprojects">Manage Projects</a>
+          </li>
+        </ul>
+      </li>
+    </li>      
+    <li>
+      <a href="/accounts/profile">
+        <span class="link-title">Profile</span>
+        <i class="mdi mdi-account-circle link-icon"></i>
+      </a>
+    </li>
+  </ul>
+</div>
 
-<div class="main">
-    <div class="form-wrapper">
-        <form method="post">
-            <h2>Profile</h2>
-            {% for info in user_profile %}
-                <input class="form-control" type="text" name="username" placeholder=" Username" value="{{ info.username }}">
-                <input class="form-control" type="text" name="name" placeholder=" Full Name" value="{{ info.name }}">
-                <input class="form-control" type="text" name="email" placeholder=" email" value="{{ info.email }}">
-                <input class="form-control" type="text" name="affiliation" placeholder=" Affiliation" value="{{ info.affiliation }}">
-                <input class="form-control" type="text" name="title" placeholder=" Title" value="{{ info.title }}">
-                <input class="form-control" type="text" name="country" placeholder=" Country" value="{{ info.country }}">
-            {% endfor %}
-            <div class="actions">
-                <button type="submit" class="bt btn-info btn-sm">Save</button>
+<div class="page-content-wrapper">
+    <div class="page-content-wrapper-inner">
+        <div class="content-viewport">
+            <div class="row">
+              <div class="col-12 py-5">
+                <h2>Dashboard</h2>
+                {% for info in user_profile %}
+                <p class="text-gray">Welcome aboard, {{info.name}}</p>
+                {% endfor %}
+              </div>
             </div>
-        </form>
+            <div class="row">
+                <div class="col-12" id="recommendedProjects">
+                    <div class="col-lg-12">
+                        <div class="grid">
+                          <h5 class="grid-header">Recommended Projects</h5>
+                          <div class="list-group">
+                            {% macro sentence_case(text) %}
+                                  {{ text[0]|upper}}{{text[1:] | replace('_', ' ') }}
+                            {% endmacro %}
+                            {% macro yesno(text) %}
+                                  {% if text == 'y' %}
+                                    {{'Yes'}}
+                                  {% else %}
+                                    {{'No'}}
+                                  {% endif %}
+                            {% endmacro %}
+                            {% for pro in projects %}
+                            <div class="list-group-item flex-column align-items-start">
+                              <div class="d-flex w-100 justify-content-between">
+                                <input class="form-control" type="hidden" name='PID' value="{{pro.PID}}">
+                                <h6 class="mb-1 text-success">{{pro.title}}</h6>
+                              </div>
+                              <p class="mb-1"><strong>{{sentence_case(pro.project_type)}}</strong></p>
+                              <p class="mb-1">{{pro.description}}</p>
+                              
+                              <div class="accordion" id="projectExample{{ loop.index }}">
+                                <div class="card">
+                                  <div class="card-header" id="heading{{ loop.index }}">
+                                    <h2 class="mb-0">
+                                      <button class="btn btn-link projectlink collapsed" type="button" data-toggle="collapse" data-target="#collapseReq{{ loop.index }}" aria-expanded="false" aria-controls="collapseReq{{ loop.index }}">
+                                        See requirements
+                                      </button>
+                                    </h2>
+                                  </div>                              
+                                  <div id="collapseReq{{ loop.index }}" class="collapse" aria-labelledby="heading{{ loop.index }}" data-parent="#projectExample{{ loop.index}}">
+                                    <div class="card-body">
+                                      <form>
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Aperture Upper Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.aperture_upper_limit}}</label>
+                                          </div>
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Aperture Lower Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.aperture_lower_limit}}</label>
+                                          </div>
+                                        </div>
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>FoV Upper Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.FoV_upper_limit}}</label>
+                                          </div>
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>FoV Lower Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.FoV_lower_limit}}</label>
+                                          </div>
+                                        </div>
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Pixel Scale Upper Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.pixel_scale_upper_limit}}</label>
+                                          </div>
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Pixel Scale Lower Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.pixel_scale_lower_limit}}</label>
+                                          </div>
+                                        </div>
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Mount Type:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.mount_type}}</label>
+                                          </div>
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Camera Type:</label>
+                                          </div>
+                                          <div class="col-md-5 showcase_content_area">
+                                            <label>{{pro.camera_type1}}, {{pro.camera_type2}}</label>
+                                          </div>
+                                        </div>
+                                        
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="johnsonBInput">Johnson B:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="johnsonBInput">{{yesno(pro.JohnsonB)}}</label>
+                                          </div>
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="johnsonVInput">Johnson V:</label>
+                                          </div>
+                                            <div class="col-md-1 showcase_content_area">
+                                              <label id="johnsonVInput">{{yesno(JohnsonV)}}</label>
+                                          </div> 
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="johnsonRInput">Johnson R:</label>
+                                          </div>
+                                            <div class="col-md-1 showcase_content_area">
+                                              <label id="johnsonRInput">{{yesno(pro.JohnsonR)}}</label>
+                                          </div>
+                                         
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssuInput">SDSS u:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdssuInput">{{yesno(pro.SDSSu)}}</label>
+                                          </div> 
+                                          
+                                        </div> 
+                                          <div class="form-group row showcase_row_area">             
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssgInput">SDSS g:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdssgInput">{{yesno(pro.SDSSg)}}</label>
+                                          </div> 
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssrInput">SDSS r:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdssrInput">{{yesno(pro.SDSSr)}}</label>
+                                          </div> 
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssiInput">SDSS i:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdssiInput">{{yesno(pro.SDSSi)}}</label>
+                                          </div>      
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssiInput">SDSS z:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdsszInput">{{yesno(pro.SDSSz)}}</label>
+                                          </div>                  
+                                        </div>
+                                      </form>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="card">
+                                  <div class="card-header" id="manager{{ loop.index }}">
+                                    <h2 class="mb-0">
+                                      <button class="btn btn-link collapsed projectlink" type="button" data-toggle="collapse" data-target="#managerID{{ loop.index }}" aria-expanded="false" aria-controls="managerID{{ loop.index }}">
+                                        Project Manager
+                                      </button>
+                                    </h2>
+                                  </div>
+                                  <div id="managerID{{ loop.index }}" class="collapse" aria-labelledby="manager{{ loop.index }}" data-parent="#projectExample{{ loop.index }}">
+                                    <div class="card-body">
+                                      <div class="form-group row showcase_row_area">
+                                        <div class="col-md-1 showcase_text_area">
+                                          <label>Name:</label>
+                                        </div>
+                                        <div class="col-md-3 showcase_content_area">
+                                          <label>sougdr</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label>Affiliation:</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                          <label>315.2012311
+                                          </label>
+                                        </div>
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label>Title:</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                          <label>315.2012311
+                                          </label>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="card">
+                                  <div class="card-header" id="target{{ loop.index }}">
+                                    <h2 class="mb-0">
+                                      <button class="btn btn-link projectlink collapsed getTargetInfo" type="button" data-toggle="collapse" data-target="#targetID{{ loop.index }}" aria-expanded="false" aria-controls="targetID{{ loop.index }}">
+                                        Targets
+                                      </button>
+                                    </h2>
+                                  </div>
+                                  <div id="targetID{{ loop.index }}" class="collapse" aria-labelledby="target{{ loop.index }}" data-parent="#projectExample{{ loop.index }}">
+                                    <div class="card-body">
+                                      <div class="form-group row showcase_row_area">
+                                        <div class="col-md-1 showcase_text_area">
+                                          <label>Target:</label>
+                                        </div>
+                                        <div class="col-md-3 showcase_content_area">
+                                          <label>2MASS J06080195+4539209</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label>RA (longitude):</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                          <label>315.2012311
+                                          </label>
+                                        </div>
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label>Dec (latitude):</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                          <label>315.2012311
+                                          </label>
+                                        </div>
+                                      </div>
+                                      <div class="form-group row showcase_row_area">
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label for="johnsonBInput">Johnson B</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="johnsonBOptions" id="johnsonBYes" value="Yes">
+                                          <label class="form-check-label" for="johnsonBYes">Yes</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="johnsonBOptions" id="johnsonBNo" value="No">
+                                          <label class="form-check-label" for="johnsonBNo">No</label>
+                                        </div>
+                                        </div>
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label for="johnsonVInput">Johnson V</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="johnsonVOptions" id="johnsonVYes" value="Yes">
+                                          <label class="form-check-label" for="johnsonVYes">Yes</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="johnsonVOptions" id="johnsonVNo" value="No">
+                                          <label class="form-check-label" for="johnsonVNo">No</label>
+                                        </div>
+                                        </div> 
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label for="johnsonRInput">Johnson R</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="johnsonROptions" id="johnsonRYes" value="Yes">
+                                          <label class="form-check-label" for="johnsonRYes">Yes</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="johnsonROptions" id="johnsonRNo" value="No">
+                                          <label class="form-check-label" for="johnsonRNo">No</label>
+                                        </div>
+                                        </div>
+                                      </div>
+                                      <div class="form-group row showcase_row_area">  
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label for="sdssuInput">SDSS u</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdssuOptions" id="sdssuYes" value="Yes">
+                                          <label class="form-check-label" for="sdssuYes">Yes</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdssuOptions" id="sdssuNo" value="No">
+                                          <label class="form-check-label" for="sdssuNo">No</label>
+                                        </div>
+                                        </div>              
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label for="sdssgInput">SDSS g</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdssgOptions" id="sdssgYes" value="Yes">
+                                          <label class="form-check-label" for="sdssgYes">Yes</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdssgOptions" id="sdssgNo" value="No">
+                                          <label class="form-check-label" for="sdssgNo">No</label>
+                                        </div>
+                                        </div>
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label for="sdssrInput">SDSS r</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdssrOptions" id="sdssrYes" value="Yes">
+                                          <label class="form-check-label" for="sdssrYes">Yes</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdssrOptions" id="sdssrNo" value="No">
+                                          <label class="form-check-label" for="sdssrNo">No</label>
+                                        </div>
+                                        </div>                  
+                                      </div>
+                                      <div class="form-group row showcase_row_area">
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label for="sdssiInput">SDSS i</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdssiOptions" id="sdssiYes" value="Yes">
+                                          <label class="form-check-label" for="sdssiYes">Yes</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdssiOptions" id="sdssiNo" value="No">
+                                          <label class="form-check-label" for="sdssiNo">No</label>
+                                        </div>
+                                        </div>
+                                        <div class="col-md-2 showcase_text_area">
+                                          <label for="sdsszInput">SDSS z</label>
+                                        </div>
+                                        <div class="col-md-2 showcase_content_area">
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdsszOptions" id="sdsszYes" value="Yes">
+                                          <label class="form-check-label" for="sdsszYes">Yes</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-1">
+                                          <input class="form-check-input" type="radio" name="sdsszOptions" id="sdsszNo" value="No">
+                                          <label class="form-check-label" for="sdsszNo">No</label>
+                                        </div>
+                                        </div>                  
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="row">
+                                <div class="col text-right">
+                                  <button type="button" class="btn btn-info col-md-1 mt-1 joinProject">Join</button>
+                                </div>
+                              
+                              </div>
+                            </div> 
+                            <hr class="col-11">                                    
+                            {% endfor %}
+                          </div>
+                        </div>
+                      </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                <div class="grid">
+                    <p class="grid-header">Recommended Users</p>
+                    <div class="grid-body">
+                        <div class="row">
+                        <div class="col-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <p><img class=" img-fluid" src="/static/assets/images/profile/female/image_9.png" alt="card image"></p>
+                            <h4 class="card-title">Name</h4>
+                            <p class="card-text">6 mutual friends,5 shared interests</p>
+                            <a href="#" class="btn btn-primary btn-sm">Add Friend</a>
+                        </div>
+                    </div>
+                        </div>
+                        <div class="col-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <p><img class=" img-fluid" src="/static/assets/images/profile/female/image_9.png" alt="card image"></p>
+                            <h4 class="card-title">Name</h4>
+                            <p class="card-text">6 mutual friends,5 shared interests</p>
+                            <a href="#" class="btn btn-primary btn-sm">Add Friend</a>
+                        </div>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
+                </div> 
+                </div>               
+            </div>
+
+        </div>
     </div>
 </div>
+
+
+  
 {% endblock %}

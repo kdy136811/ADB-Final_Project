@@ -1,0 +1,56 @@
+{% extends "shared/_layout.html" %}
+{% block title %}Home{% endblock %}
+{% block main_content %}
+<div class="sidebar">
+    <div class="user-profile">
+    {% for info in user_profile %}
+      <div class="display-avatar animated-avatar">
+        <img class="profile-img img-lg rounded-circle" src="/static/assets/images/profile/female/image_5.png" alt="profile image">
+      </div>
+      <div class="info-wrapper">
+        <p class="user-name">{{info.name}}</p>
+        <h6 class="user-title">{{info.title}}</h6>
+      </div>
+    {% endfor %}
+    </div>
+    <ul class="navigation-menu">
+      <li>
+        <a href="/accounts/index">
+          <span class="link-title">Dashboard</span>
+          <i class="mdi mdi-gauge link-icon"></i>
+        </a>
+      </li>
+      <li>
+        <a href="/accounts/equipments">
+          <span class="link-title">Equipment</span>
+          <i class="mdi mdi-rocket link-icon"></i>
+        </a>
+      </li>
+      <li>
+        <li>
+          <a href="#projects" data-toggle="collapse" aria-expanded="false">
+            <span class="link-title">Projects</span>
+            <i class="mdi mdi-presentation link-icon"></i>
+          </a>
+          <ul class="collapse navigation-submenu" id="projects">
+            <li>
+              <a href="/accounts/projects">Joined Projects</a>
+            </li>
+            <li>
+              <a href="/accounts/createProject">Create Projects</a>
+            </li>
+            <li>
+              <a href="/accounts/manageprojects">Manage Projects</a>
+            </li>
+          </ul>
+        </li>
+      </li>      
+      <li>
+        <a href="/accounts/profile">
+          <span class="link-title">Profile</span>
+          <i class="mdi mdi-account-circle link-icon"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+{% endblock %}
