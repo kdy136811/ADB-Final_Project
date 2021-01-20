@@ -2,7 +2,8 @@ from flask import Flask, render_template, redirect, session, url_for, flash, req
 from data.db_session import db_auth
 #from services.accounts_service import create_user, login_user, get_profile, update_profile
 from services.accounts_service import *
-import os
+import os, os.path
+import ast
 
 app = Flask(__name__) #create application
 app.secret_key = os.urandom(24) 
@@ -230,7 +231,8 @@ def project_post():
         session["usr"] = usr
         if request.form.get('button') == 'Detail':
             print(hid)
-            project_target = get_project_target(int(hid))
+            project_target = fliter_project_target(usr,int(hid))
+            #project_target = get_project_target(int(hid))
             return render_template("projects/project_target.html", project_target = project_target)
         elif request.form.get('button') == 'Create':
             return redirect(url_for("project_create_get"))
@@ -327,12 +329,97 @@ def schedule_get():
         return redirect(url_for("login_get"))
 
 @app.route('/schedule/schedule', methods=['POST'])
-def schedule_create_get():
+def schedule_create_post():
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
         user_equipments = get_user_equipments(usr)
+        if request.form.get('button') == "Choose":
+            uhaveid = request.form.get('uhaveid').strip()
+            return redirect(url_for("schedule_choose_project_get", uhaveid  = int(uhaveid)))
         return render_template("schedule/schedule_create.html", user_equipments = user_equipments)
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/schedule/schedule_choose_project', methods=['GET'])
+def schedule_choose_project_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        join_list = get_project_join(usr)  # retrun the project which user joined
+        project_list = get_project_join_filter(join_list,usr,int(request.args.get('uhaveid'))) #return the project satisify requirement 
+        print(project_list)
+        return render_template("schedule/schedule_choose_project.html", project_list = project_list)
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/schedule/schedule_choose_project', methods=['POST'])
+def schedule_choose_project_post():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        if request.form.get('button') == 'Show':
+            return redirect(url_for("schedule_show_target_get"))
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/schedule/schedule_show_target', methods=['GET'])
+def schedule_show_target_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        # target list 
+        if request.form.get('button') == 'add':
+            section = request.form.get('time_section').strip()
+            name = request.form.get('name').strip()
+            tid = request.form.get('TID').strip()
+            if path.exists('schedule_tmp'):
+                tmp = open('schedule_tmp','r+')
+                p = tmp.read()
+                p = ast.literal_eval(p)
+                tmp.close()
+                tmp = open('schedule_tmp','w')
+                time_section = [0]*24
+                tmp_list = []
+                tmp_dict = {}
+                for i in range(0,24):
+                    if(section[i]==1): time_section[i] = int(tid)
+                tmp_dict['TID'] =  int(tid)
+                tmp_dict['name'] = name
+                tmp_dict['time_section'] = time_section
+                p.append(tmp_dict) 
+                tmp.write(str(p))
+                tmp.close()
+            else:
+                tmp = open('schedule_tmp','w')
+                time_section = [0]*24
+                tmp_list = []
+                tmp_dict = {}
+                for i in range(0,24):
+                    if(section[i]==1): time_section[i] = int(tid)
+                tmp_dict['TID'] =  int(tid)
+                tmp_dict['name'] = name
+                tmp_dict['time_section'] = time_section
+                tmp_list.append(tmp_dict)
+                tmp.write(str(tmp_list))
+                tmp.close()
+        if request.form.get('button') == 'update':
+            tmp = open('schedule_tmp','w')
+            time_section = [0]*24
+            for i in range(0,24):
+                if(section[i]==1): time_section[i] = int(TID)
+            
+            old = pickle.load(tmp)
+            for i in range(len(old)):
+                if old[i]['TID'] == int(TID): break
+            
+            d[i]['time_section'] = time_section
+            pickle.dump(old,tmp)
+            tmp.close()
+        #delete
+        #if request.form.get('button') == 'save':
+        #    itime_section = request.form.get('time_section').strip()
+        return render_template("schedule/schedule_show_target.html", target_list = target_list)
     else:
         return redirect(url_for("login_get"))
 # @app.route('/projects/project', methods=['POST'])
