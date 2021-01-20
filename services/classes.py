@@ -71,7 +71,12 @@ class Project(GraphObject):
     SDSSg = Property()
     SDSSr = Property()
     SDSSi = Property()
-    SDSSz =Property()
+    SDSSz = Property()
     own = RelatedFrom(User,"MANAGE")
 
-
+class Schedule(GraphObject):
+    __primarylabel__ = "schedule"
+    __primarykey__ = "SID"
+    SID = Property()
+    last_update = Property()
+    observe_section = Property()

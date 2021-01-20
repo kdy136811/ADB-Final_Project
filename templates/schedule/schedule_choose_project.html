@@ -8,13 +8,21 @@
             <h2>Project</h2>
             <input class="form-control" type="hidden" name='PID' >
         </form>      
+<<<<<<< HEAD
             {% for info in project_list %}
+=======
+            {% for info in projects %}
+>>>>>>> origin
                 <h4>project {{loop.index}}</h4>
                 <form method="post">
                     <input class="form-control" type="hidden" name='PID' value="{{info.PID}}">
                     <input class="form-control" type="text" name="title" value="{{info.title}}" >
                 <div class="actions">
+<<<<<<< HEAD
                     <button name="button" type="submit" class="bt btn-info btn-sm" value="Show">Show target</button>
+=======
+                    <button name="button" type="submit" class="bt btn-info btn-sm" value="Choose">Join</button>
+>>>>>>> origin
                 </div>
                 </form>
                 {% endfor%}
