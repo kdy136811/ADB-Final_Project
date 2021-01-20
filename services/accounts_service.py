@@ -370,6 +370,18 @@ def create_project_target(usr: str, PID: int, TID: int, JohnsonB: str, JohnsonR:
     result = graph.run(query, PID = PID, TID = TID, phavetid = cnt, JohnsonB = JohnsonB, JohnsonR = JohnsonR, JohnsonV = JohnsonV, SDSSg = SDSSg, SDSSi = SDSSi, SDSSr = SDSSr, SDSSu = SDSSu, SDSSz = SDSSz).data()
     return result
 
+def auto_join(usr: str,PID: int):
+    query = "MATCH (x:user {email:$usr}) MATCH (p:project {PID:$PID})  create (x)-[:Member_of {memberofid: $memberofid, join_time: $join_time}]->(p)"
+    time = graph.run("return datetime() as time").data() 
+
+    count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofid  order by rel.memberofid DESC limit 1 ").data()
+    time = graph.run("return datetime() as time").data() 
+    if len(count) == 0:
+        cnt = 0
+    else:
+        cnt = count[0]['rel.memberofid']+1
+    graph.run(query, usr = usr, PID = PID, memberofid = cnt, join_time = time[0]['time'])
+
 def apply_project(usr: str,PID: int)->int:
     # this function will create an apply_to relationship to the project
     # return value
@@ -440,7 +452,7 @@ def accept_join_project(usr: str, PID: int, UID: int, applyid: int):
     if len(result) == 1  and result[0]['status'] == 'accept':
         
         query = "CREATE (x:user {email: $UID})-[rel: Member_of {memberofid: $memberofid, join_time: $time}]->(p:project {PID: $PID})"
-        count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofif  order by rel.memberofid DESC limit 1 ").data()
+        count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofid  order by rel.memberofid DESC limit 1 ").data()
         time = graph.run("return datetime() as time").data() 
         if len(count) == 0:
             cnt = 0
