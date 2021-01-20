@@ -359,7 +359,8 @@ def create_project_target(usr: str, PID: int, TID: int, JohnsonB: str, JohnsonR:
         cnt = count[0]['pht.phavetid']+1
     graph.run(query, PID = PID, TID = TID, phavetid = cnt, JohnsonB = JohnsonB, JohnsonR = JohnsonR, JohnsonV = JohnsonV, SDSSg = SDSSg, SDSSi = SDSSi, SDSSr = SDSSr, SDSSu = SDSSu, SDSSz = SDSSz)
 
-def auto_join(usr: str,PID: int):
+def auto_join(usr: str, PID: int):
+    # create user-project relationship
     query = "MATCH (x:user {email:$usr}) MATCH (p:project {PID:$PID})  create (x)-[:Member_of {memberofid: $memberofid, join_time: $join_time}]->(p)"
     time = graph.run("return datetime() as time").data() 
 
@@ -370,6 +371,19 @@ def auto_join(usr: str,PID: int):
     else:
         cnt = count[0]['rel.memberofid']+1
     graph.run(query, usr = usr, PID = PID, memberofid = cnt, join_time = time[0]['time'])
+
+    # create equipment-project relationship
+    qualified_eid_list = get_qualified_equipment(usr, PID)
+    query = "CREATE (p:project {PID:$PID})-[rel:PhaveE {phaveeid:$phaveeid}]->(e:equipments {EID:$EID})"
+
+    for i in range(len(qualified_eid_list)):
+        count = graph.run("MATCH ()-[rel:PhaveE]->() return rel.phaveeid order by rel.phaveeid DESC limit 1").data()
+        if len(count) == 0:
+            cnt = 0
+        else:
+            cnt = count[0]['rel.phaveeid']+1
+        graph.run(query, PID=PID, EID=qualified_eid_list[i], phaveeid=cnt)
+
 
 def apply_project(usr: str,PID: int)->int:
     # this function will create an apply_to relationship to the project
@@ -467,9 +481,9 @@ def accept_join_project(usr: str, PID: int, UID: int, applyid: int):
         return 0
 
 
-def get_qualified_equipment(UID: int, PID: int):
-    query_eid = "MATCH (x:user{UID:$UID})-[r:UhaveE]->(e:equipments) RETURN e.EID as EID, e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz, r.declination_limit as declination"
-    equipment = graph.run(query_eid, UID=UID).data()
+def get_qualified_equipment(usr: str, PID: int):
+    query_eid = "MATCH (x:user{email:$usr})-[r:UhaveE]->(e:equipments) RETURN e.EID as EID, e.JohnsonB as jb,e.JohnsonV as jv, e.JohnsonR as jr, e.SDSSu as su, e.SDSSg as sg, e.SDSSr as sr , e.SDSSi as si, e.SDSSz as sz, r.declination_limit as declination"
+    equipment = graph.run(query_eid, usr=usr).data()
 
     project_target = graph.run("MATCH (p:project {PID: $PID})-[pht:PHaveT]->(t:target) " \
         " return pht.JohnsonB as JohnsonB, pht.JohnsonV as JohnsonV, pht.JohnsonR as JohnsonR, pht.SDSSu as SDSSu, pht.SDSSg as SDSSg, pht.SDSSr as SDSSr , pht.SDSSi as SDSSi, pht.SDSSz as SDSSz"
