@@ -440,16 +440,10 @@ def accept_join_project(usr: str, PID: int, UID: int, applyid: int):
     query = "MATCH (x:user {email: $UID})-[rel:Apply_to {applyid: $applyid}]->(p:project {PID: $PID}) SET rel.status = $status return  rel.status as status"
     result = graph.run(query, status = 'accept', PID = PID, UID = UID, applyid = applyid).data()
     if len(result) == 1  and result[0]['status'] == 'accept':
-<<<<<<< HEAD
-        
+        # create user-project relationship
         query = "CREATE (x:user {email: $UID})-[rel: Member_of {memberofid: $memberofid, join_time: $time}]->(p:project {PID: $PID})"
         count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofid  order by rel.memberofid DESC limit 1 ").data()
         time = graph.run("return datetime() as time").data() 
-=======
-        # create user-project relationship
-        query = "CREATE (x:user {email: $UID})-[rel: Member_of {memberofid: $memberofid}]->(p:project {PID: $PID})"
-        count = graph.run("MATCH ()-[rel:Memberof]->() return rel.memberofid order by rel.memberofid DESC limit 1 ").data()
->>>>>>> main
         if len(count) == 0:
             cnt = 0
         else:
