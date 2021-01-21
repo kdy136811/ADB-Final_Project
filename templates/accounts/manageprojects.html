@@ -34,7 +34,7 @@
           </a>
           <ul class="collapse navigation-submenu" id="projects">
             <li>
-              <a href="/accounts/projects">Joined Projects</a>
+              <a href="/accounts/joinedProjects">Joined Projects</a>
             </li>
             <li>
               <a href="/accounts/createProject">Create Projects</a>
@@ -53,4 +53,194 @@
       </li>
     </ul>
   </div>
+  <div class="page-content-wrapper">
+    <div class="page-content-wrapper-inner">
+        <div class="content-viewport">
+            <div class="row">
+                <div class="col-12" id="manageProjects">
+                    <div class="col-lg-12">
+                        <div class="grid">
+                          <h5 class="grid-header">Manage Projects</h5>
+                          <div class="list-group">
+                            {% macro sentence_case(text) %}
+                                  {{ text[0]|upper}}{{text[1:] | replace('_', ' ') }}
+                            {% endmacro %}
+                            {% macro yesno(text) %}
+                                  {% if text == 'y' %}
+                                    {{'Yes'}}
+                                  {% else %}
+                                    {{'No'}}
+                                  {% endif %}
+                            {% endmacro %}
+                            {% for pro in projects %}
+                            <div class="list-group-item flex-column align-items-start">
+                              <div class="d-flex w-100 justify-content-between">
+                                <input class="form-control" type="hidden" name='PID' value="{{pro.PID}}">
+                                <h6 class="mb-1 text-success">{{pro.title}}</h6>
+                              </div>
+                              <p class="mb-1"><strong>{{sentence_case(pro.project_type)}}</strong></p>
+                              <p class="mb-1">{{pro.description}}</p>
+                              
+                              <div class="accordion" id="projectExample{{ loop.index }}">
+                                <div class="card">
+                                  <div class="card-header" id="heading{{ loop.index }}">
+                                    <h2 class="mb-0">
+                                      <button class="btn btn-link projectlink collapsed" type="button" data-toggle="collapse" data-target="#collapseReq{{ loop.index }}" aria-expanded="false" aria-controls="collapseReq{{ loop.index }}">
+                                        See requirements
+                                      </button>
+                                    </h2>
+                                  </div>                              
+                                  <div id="collapseReq{{ loop.index }}" class="collapse" aria-labelledby="heading{{ loop.index }}" data-parent="#projectExample{{ loop.index}}">
+                                    <div class="card-body">
+                                      <form>
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Aperture Upper Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.aperture_upper_limit}}</label>
+                                          </div>
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Aperture Lower Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.aperture_lower_limit}}</label>
+                                          </div>
+                                        </div>
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>FoV Upper Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.FoV_upper_limit}}</label>
+                                          </div>
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>FoV Lower Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.FoV_lower_limit}}</label>
+                                          </div>
+                                        </div>
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Pixel Scale Upper Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.pixel_scale_upper_limit}}</label>
+                                          </div>
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Pixel Scale Lower Limit:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.pixel_scale_lower_limit}}</label>
+                                          </div>
+                                        </div>
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Mount Type:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label>{{pro.mount_type}}</label>
+                                          </div>
+                                          <div class="col-md-3 showcase_text_area">
+                                            <label>Camera Type:</label>
+                                          </div>
+                                          <div class="col-md-5 showcase_content_area">
+                                            <label>{{pro.camera_type1}}, {{pro.camera_type2}}</label>
+                                          </div>
+                                        </div>
+                                        
+                                        <div class="form-group row showcase_row_area">
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="johnsonBInput">Johnson B:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="johnsonBInput">{{yesno(pro.JohnsonB)}}</label>
+                                          </div>
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="johnsonVInput">Johnson V:</label>
+                                          </div>
+                                            <div class="col-md-1 showcase_content_area">
+                                              <label id="johnsonVInput">{{yesno(JohnsonV)}}</label>
+                                          </div> 
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="johnsonRInput">Johnson R:</label>
+                                          </div>
+                                            <div class="col-md-1 showcase_content_area">
+                                              <label id="johnsonRInput">{{yesno(pro.JohnsonR)}}</label>
+                                          </div>
+                                         
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssuInput">SDSS u:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdssuInput">{{yesno(pro.SDSSu)}}</label>
+                                          </div> 
+                                          
+                                        </div> 
+                                          <div class="form-group row showcase_row_area">             
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssgInput">SDSS g:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdssgInput">{{yesno(pro.SDSSg)}}</label>
+                                          </div> 
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssrInput">SDSS r:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdssrInput">{{yesno(pro.SDSSr)}}</label>
+                                          </div> 
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssiInput">SDSS i:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdssiInput">{{yesno(pro.SDSSi)}}</label>
+                                          </div>      
+                                          <div class="col-md-2 showcase_text_area">
+                                            <label for="sdssiInput">SDSS z:</label>
+                                          </div>
+                                          <div class="col-md-1 showcase_content_area">
+                                            <label id="sdsszInput">{{yesno(pro.SDSSz)}}</label>
+                                          </div>                  
+                                        </div>
+                                      </form>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="card">
+                                  <div class="card-header" id="manager{{ loop.index }}">
+                                    <h2 class="mb-0">
+                                      <button class="btn btn-link collapsed projectlink getJoinedEquipmentInfo" type="button" data-toggle="collapse" data-target="#joinedEquipID{{ loop.index }}" aria-expanded="false" aria-controls="joinedEquipID{{ loop.index }}">
+                                        Joined Equipments
+                                      </button>
+                                    </h2>
+                                  </div>
+                                  <div id="joinedEquipID{{ loop.index }}" class="collapse" aria-labelledby="joinedEquipID{{ loop.index }}" data-parent="#projectExample{{ loop.index }}">
+                                    
+                                  </div>
+                                </div>
+                                <div class="card">
+                                  <div class="card-header" id="target{{ loop.index }}">
+                                    <h2 class="mb-0">
+                                      <button class="btn btn-link projectlink collapsed getTargetInfo" type="button" data-toggle="collapse" data-target="#targetID{{ loop.index }}" aria-expanded="false" aria-controls="targetID{{ loop.index }}">
+                                        Targets
+                                      </button>
+                                    </h2>
+                                  </div>
+                                  <div id="targetID{{ loop.index }}" class="collapse" aria-labelledby="target{{ loop.index }}" data-parent="#projectExample{{ loop.index }}">
+                                  </div>
+                                </div>
+                              </div>
+                            </div> 
+                            <hr class="col-11">                                    
+                            {% endfor %}
+                          </div>
+                        </div>
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

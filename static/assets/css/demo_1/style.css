@@ -515,4 +515,18 @@ footer {
   padding: 0px;
 }
 
+
+#manageProjects .card-header{
+  padding: 0px;
+}
+
+.table-wrapper{
+  max-height: 200px;
+  overflow: auto;
+  display:inline-block;
+}
+
+.table-wrapper thead th{
+  position: sticky; top: 0;
+}
 /*# sourceMappingURL=style.css.map */

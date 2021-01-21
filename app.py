@@ -98,11 +98,19 @@ def joinProject():
         usr = session["usr"]
         session["usr"] = usr
         PID = request.form.get('PID').strip()
-        flag = apply_project_status(usr,int(PID))
-        if flag == 1:
-            apply_project(usr,int(PID))
-            return jsonify(success = "Successfully requested to join the project.")
-        return jsonify(error = "Already asked to join")
+        auto_join(usr,int(PID))
+        return jsonify(success = "Successfully joined the project.")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/joinedProjects', methods=['GET'])
+def getJoinedProjects():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        user_profile = get_profile(usr)
+        projects = get_project_join(usr)
+        return render_template("accounts/joinedProjects.html", user_profile=user_profile, projects = projects)
     else:
         return redirect(url_for("login_get"))
 
@@ -112,7 +120,8 @@ def manageProject():
         usr = session["usr"]
         session["usr"] = usr
         user_profile = get_profile(usr)
-        return render_template("accounts/manageprojects.html", user_profile=user_profile)
+        projects = user_manage_projects_get(usr)
+        return render_template("accounts/manageprojects.html", user_profile=user_profile, projects = projects)
     else:
         return redirect(url_for("login_get"))
 
@@ -123,6 +132,17 @@ def getTargetInfo():
     project_target = get_project_target(int(hid))
     return jsonify(project_targets = project_target)
 
+@app.route('/getJoinedEquipmentInfo', methods=['POST'])
+def getJoinedEquipmentInfo():
+    hid = request.form.get('PID').strip()
+    project_equipments = get_project_equipment(int(hid))
+    return jsonify(project_equipments = project_equipments)
+
+@app.route('/getPMInfo', methods=['POST'])
+def getPMInfo():
+    hid = request.form.get('PID').strip()
+    project_manager = get_project_manager_name(int(hid))
+    return jsonify(project_manager = project_manager)
 
 @app.route('/accounts/profile', methods=['GET'])
 def profile_get():
@@ -172,12 +192,13 @@ def equipments_get():
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
+        user_profile = get_profile(usr)
         count = count_user_equipment(usr)
         if count == 0:
             flash("You don't have any equipment yet! Please add an equipment first", "error")
             return render_template("accounts/equipments.html", user_equipments = None)
         user_equipments = get_user_equipments(usr)
-        return render_template("accounts/equipments.html", user_equipments = user_equipments)
+        return render_template("accounts/equipments.html", user_profile=user_profile, user_equipments = user_equipments)
     else:
         return redirect(url_for("login_get"))
 

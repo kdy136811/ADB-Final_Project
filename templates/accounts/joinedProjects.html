@@ -1,13 +1,5 @@
 {% extends "shared/_layout.html" %}
 {% block title %}Dashboard{% endblock %}
-{% block header %}
-<form action="#" class="t-header-search-box">
-    <div class="input-group">
-      <input type="text" class="form-control" id="inlineFormInputGroup" placeholder="Search" autocomplete="off">
-      <button class="btn btn-primary" type="submit"><i class="mdi mdi-arrow-right-thick"></i></button>
-    </div>
-  </form>
-{% endblock %}
 {% block main_content %}
 <div class="sidebar">
   <div class="user-profile">
@@ -66,18 +58,10 @@
     <div class="page-content-wrapper-inner">
         <div class="content-viewport">
             <div class="row">
-              <div class="col-12 py-5">
-                <h2>Dashboard</h2>
-                {% for info in user_profile %}
-                <p class="text-gray">Welcome aboard, {{info.name}}</p>
-                {% endfor %}
-              </div>
-            </div>
-            <div class="row">
-                <div class="col-12" id="recommendedProjects">
+                <div class="col-12" id="joinedProjects">
                     <div class="col-lg-12">
                         <div class="grid">
-                          <h5 class="grid-header">Recommended Projects</h5>
+                          <h5 class="grid-header">Joined Projects</h5>
                           <div class="list-group">
                             {% macro sentence_case(text) %}
                                   {{ text[0]|upper}}{{text[1:] | replace('_', ' ') }}
@@ -228,36 +212,12 @@
                                 <div class="card">
                                   <div class="card-header" id="manager{{ loop.index }}">
                                     <h2 class="mb-0">
-                                      <button class="btn btn-link collapsed projectlink" type="button" data-toggle="collapse" data-target="#managerID{{ loop.index }}" aria-expanded="false" aria-controls="managerID{{ loop.index }}">
+                                      <button class="btn btn-link collapsed projectlink getPMInfo" type="button" data-toggle="collapse" data-target="#managerID{{ loop.index }}" aria-expanded="false" aria-controls="managerID{{ loop.index }}">
                                         Project Manager
                                       </button>
                                     </h2>
                                   </div>
                                   <div id="managerID{{ loop.index }}" class="collapse" aria-labelledby="manager{{ loop.index }}" data-parent="#projectExample{{ loop.index }}">
-                                    <div class="card-body">
-                                      <div class="form-group row showcase_row_area">
-                                        <div class="col-md-1 showcase_text_area">
-                                          <label>Name:</label>
-                                        </div>
-                                        <div class="col-md-3 showcase_content_area">
-                                          <label>sougdr</label>
-                                        </div>
-                                        <div class="col-md-2 showcase_text_area">
-                                          <label>Affiliation:</label>
-                                        </div>
-                                        <div class="col-md-2 showcase_content_area">
-                                          <label>315.2012311
-                                          </label>
-                                        </div>
-                                        <div class="col-md-2 showcase_text_area">
-                                          <label>Title:</label>
-                                        </div>
-                                        <div class="col-md-2 showcase_content_area">
-                                          <label>315.2012311
-                                          </label>
-                                        </div>
-                                      </div>
-                                    </div>
                                   </div>
                                 </div>
                                 <div class="card">
@@ -273,12 +233,12 @@
                                   </div>
                                 </div>
                               </div>
-                              <div class="row">
+                              <!-- <div class="row">
                                 <div class="col text-right">
                                   <button type="button" class="btn btn-info col-md-1 mt-1 joinProject">Join</button>
                                 </div>
                               
-                              </div>
+                              </div> -->
                             </div> 
                             <hr class="col-11">                                    
                             {% endfor %}
@@ -287,38 +247,6 @@
                       </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-12">
-                <div class="grid">
-                    <p class="grid-header">Recommended Users</p>
-                    <div class="grid-body">
-                        <div class="row">
-                        <div class="col-4">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <p><img class=" img-fluid" src="/static/assets/images/profile/female/image_9.png" alt="card image"></p>
-                            <h4 class="card-title">Name</h4>
-                            <p class="card-text">6 mutual friends,5 shared interests</p>
-                            <a href="#" class="btn btn-primary btn-sm">Add Friend</a>
-                        </div>
-                    </div>
-                        </div>
-                        <div class="col-4">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <p><img class=" img-fluid" src="/static/assets/images/profile/female/image_9.png" alt="card image"></p>
-                            <h4 class="card-title">Name</h4>
-                            <p class="card-text">6 mutual friends,5 shared interests</p>
-                            <a href="#" class="btn btn-primary btn-sm">Add Friend</a>
-                        </div>
-                    </div>
-                    </div>
-                    </div>
-                    </div>
-                </div> 
-                </div>               
-            </div>
-
         </div>
     </div>
 </div>

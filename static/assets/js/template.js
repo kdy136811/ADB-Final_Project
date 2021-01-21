@@ -120,10 +120,10 @@ $(".editEquipmentBtn").on("click",function(){
     $(this).parent().prev().children().eq(0).find(".hideEquipmentBtn").css({display: "none"});
   }
   $(this).css({display: "none"});
-  $(this).parent().prev().children().eq(0).find(".deleteEquipmentBtn").css({display: "none"})
+  $(this).parent().prev().children().eq(0).find(".deleteEquipmentBtn").css({display: "inline"})
   $(this).nextAll().eq(1).css({display: "none"})
   $(this).next().css({display: "block"})
-  $(this).parent().prev().children().eq(0).find(".saveEquipmentBtn").css({display: "block"})
+  $(this).parent().prev().children().eq(0).find(".saveEquipmentBtn").css({display: "inline"})
 });
 
 $(".cancelEquipmentBtn").on("click", function(){
@@ -133,15 +133,10 @@ $(".cancelEquipmentBtn").on("click", function(){
   $(this).parent().prev().children().eq(0).find(".showEquipmentBtn").css({display: "block"});
   $(this).parent().prev().children().eq(0).find(".hideEquipmentBtn").click();
   $(this).css({display: "none"});
-  $(this).parent().prev().children().eq(0).find(".deleteEquipmentBtn").css({display: "block"});
+  $(this).parent().prev().children().eq(0).find(".deleteEquipmentBtn").css({display: "none"});
   $(this).prev().css({display: "block"});
   $(this).parent().prev().children().eq(0).find(".saveEquipmentBtn").css({display: "none"});
   $(this).next().css({display: "block"});
-});
-
-$(".deleteEquipmentBtn").on("click",function(){
-  $($this).prevAll().eq(2).removeAttr('disabled');
-  $($this).prevAll().eq(4).removeAttr('disabled');
 });
 
 $("#saveEquipmentBtn").on("click", function(){
@@ -168,20 +163,250 @@ $("#cancelAddProject").on("click", function(){
 });
 
 $(".getTargetInfo").on("click", function(){
-  $.ajax({
-    url: '/getTargetInfo',
-    type: "POST",
-    data: {
-        PID: "1038"
-    },
-    dataType: "json",
-    success: function (data) {
-        console.log(data);
-    },
-    error: function (error) {
-        console.log(`Error ${error}`);
-    }
+  var pid = $(this).parent().parent().parent().parent().parent().find('input[name = "PID"]').val();
+  if($(this).parent().parent().next().children().length==0){
+    var element = $(this).parent().parent().next();
+      $(element).append(`<div class="table-wrapper col-12">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Target Name</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>`);
+    element = $(element).find("tbody");
+    $.ajax({
+      url: '/getTargetInfo',
+      type: "POST",
+      data: {
+          PID: pid
+      },
+      dataType: "json",
+      success: function (data) {
+        $.each(data["project_targets"], function(i, item) {
+          $(element).append(`<tr><td>`+item.name+`</td><td>`+item.lat+`</td><td>`+item.lon+`</td></tr>`);
+        });
+      },
+      error: function (error) {
+          console.log(`Error ${error}`);
+      }
+    
+    });
+  }
+
 });
+
+$(".getPMInfo").on("click", function(){
+  var pid = $(this).parent().parent().parent().parent().parent().find('input[name = "PID"]').val();
+  console.log("PID: "+pid);
+  if($(this).parent().parent().next().children().length==0){
+    var element = $(this).parent().parent().next();
+    $.ajax({
+      url: '/getPMInfo',
+      type: "POST",
+      data: {
+          PID: pid
+      },
+      dataType: "json",
+      success: function (data) {
+        $.each(data["project_manager"], function(i, item) {
+          $(element).append(`<div class="card-body">
+          <div class="form-group row showcase_row_area">
+            <div class="col-md-1 showcase_text_area">
+              <label>Name:</label>
+            </div>
+            <div class="col-md-3 showcase_content_area">
+              <label>`+item.name+`</label>
+            </div>
+            <div class="col-md-2 showcase_text_area">
+              <label>Affiliation:</label>
+            </div>
+            <div class="col-md-2 showcase_content_area">
+              <label>`+item.affiliation+`
+              </label>
+            </div>
+            <div class="col-md-2 showcase_text_area">
+              <label>Title:</label>
+            </div>
+            <div class="col-md-2 showcase_content_area">
+              <label>`+item.title+`
+              </label>
+            </div>
+          </div>
+        </div>`);
+        });
+      },
+      error: function (error) {
+          console.log(error);
+      }
+    
+    });
+  }
+
+});
+
+$(".getJoinedEquipmentInfo").on("click", function(){
+  var pid = $(this).parent().parent().parent().parent().parent().find('input[name = "PID"]').val();
+  if($(this).parent().parent().next().children().length==0){
+    var element = $(this).parent().parent().next();
+    //   $(element).append(`<div class="table-wrapper col-12">
+    //   <table class="table">
+    //     <thead>
+    //       <tr>
+    //         <th>Target Name</th>
+    //         <th>Latitude</th>
+    //         <th>Longitude</th>
+    //       </tr>
+    //     </thead>
+    //     <tbody>
+    //     </tbody>
+    //   </table>
+    // </div>`);
+    // element = $(element).find("tbody");
+    $.ajax({
+      url: '/getJoinedEquipmentInfo',
+      type: "POST",
+      data: {
+          PID: pid
+      },
+      dataType: "json",
+      success: function (data) {
+        console.log(data["project_equipments"].length);
+        if(data["project_equipments"].length == 0){
+          $(element).append(`<div class="alert alert-warning alert-dismissible fade show" role="alert">No one has joined this project yet<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>`);
+        } else {
+         $.each(data["project_equipments"], function(i, item) {
+           $(element).append(`
+               <div class="form-group row showcase_row_area">       
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="siteInput">Aperture</label>
+                 </div>
+                 <div class="col-md-10 showcase_content_area">
+                   <label type="text" class="form-control">`+item.aperture+`</label>
+                 </div> 
+               </div>
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="trackingInput">Tracking Accuracy</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                  <label type="text" class="form-control">`+item.accuracy+`</label>
+                 </div>  
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="mountSelect">Mount Type</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.mount_type+`</label>
+                 </div>           
+               </div>
+               <div class="form-group row showcase_row_area"> 
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="fovInput">FoV</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.Fov+`</label>
+                 </div> 
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="limitingInput">Limiting Magnitude</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.lim_magnitude+`</label>
+                 </div> 
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="pxInput">Pixel Scale</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.pixel_scale+`</label>
+                 </div>
+               </div>
+               <div class="form-group row showcase_row_area">
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="elevationInput">Elevation Limit</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.elevation_lim+`</label>
+                 </div>                          
+               </div>
+               <div class="form-group row showcase_row_area">
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="johnsonBInput">Johnson B</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                    <label type="text" class="form-control">`+item.JohnsonB+`</label>
+                 </div>
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="johnsonVInput">Johnson V</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.JohnsonV+`</label>
+                 </div> 
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="johnsonRInput">Johnson R</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.JohnsonR+`</label>
+                 </div>
+               </div>
+               <div class="form-group row showcase_row_area">  
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="sdssuInput">SDSS u</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.SDSSu+`</label>
+                 </div>              
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="sdssgInput">SDSS g</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.SDSSg+`</label>
+                 </div>
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="sdssrInput">SDSS r</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.SDSSr+`</label>
+                 </div>                  
+               </div>
+               <div class="form-group row showcase_row_area">
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="sdssiInput">SDSS i</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.SDSSi+`</label>
+                 </div>
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="sdsszInput">SDSS z</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.SDSSz+`</label>
+                 </div>                  
+               </div>
+               <div class="form-group row showcase_row_area">
+                 <div class="col-md-2 showcase_text_area">
+                   <label for="cameraInput">Camera Type</label>
+                 </div>
+                 <div class="col-md-2 showcase_content_area">
+                 <label type="text" class="form-control">`+item.camera_type1+`,`+item.camera_type2+`</label>
+                 </div>
+              </div>       
+               </div>
+               </div>`);
+         });
+        }
+      },
+      error: function (error) {
+          console.log(`Error ${error}`);
+      }
+    
+    });
+  }
 
 });
 
@@ -198,15 +423,18 @@ $(".joinProject").on("click", function(){
     dataType: "json",
     success: function (data) {
       if(data["error"]){
-        $(element).prepend(`<div class="alert alert-warning alert-dismissible fade show" role="alert">`+data["error"]+`<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        $(element).parent().prepend(`<div class="alert alert-warning alert-dismissible fade show" role="alert">`+data["error"]+`<button type="button" class="close" data-dismiss="alert" aria-label="Close">
         <span aria-hidden="true">&times;</span>
       </button>
     </div>`);
       }else{
-        $(element).prepend(`<div class="alert alert-success alert-dismissible fade show" role="alert">`+data["success"]+`<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        $(element).parent().prepend(`<div class="alert alert-success alert-dismissible fade show" role="alert">`+data["success"]+`<button type="button" class="close" data-dismiss="alert" aria-label="Close">
         <span aria-hidden="true">&times;</span>
       </button>
     </div>`);
+    $(element).next().remove();
+    $(element).remove();
+        
       }
         
     },

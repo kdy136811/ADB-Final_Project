@@ -4,3 +4,4 @@ py2neo
 passlib
 astropy
 astroplan
+flask-paginate
