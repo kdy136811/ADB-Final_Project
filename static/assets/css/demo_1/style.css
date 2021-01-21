@@ -520,6 +520,10 @@ footer {
   padding: 0px;
 }
 
+#joinedProjects .card-header{
+  padding: 0px;
+}
+
 .table-wrapper{
   max-height: 200px;
   overflow: auto;

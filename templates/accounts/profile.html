@@ -26,7 +26,6 @@
         <i class="mdi mdi-rocket link-icon"></i>
       </a>
     </li>
-    <li>
       <li>
         <a href="#projects" data-toggle="collapse" aria-expanded="false">
           <span class="link-title">Projects</span>
@@ -43,13 +42,20 @@
             <a href="/accounts/manageprojects">Manage Projects</a>
           </li>
         </ul>
-      </li>
-    </li>      
+      </li>   
     <li>
-      <a href="/accounts/profile">
+      <a href="#profile" data-toggle="collapse" aria-expanded="false">
         <span class="link-title">Profile</span>
         <i class="mdi mdi-account-circle link-icon"></i>
       </a>
+      <ul class="collapse navigation-submenu" id="profile">
+        <li>
+          <a href="/accounts/profile">Profile</a>
+        </li>
+        <li>
+          <a href="/accounts/interests">Manage Interests</a>
+        </li>
+      </ul>
     </li>
   </ul>
 </div>
@@ -364,44 +370,7 @@
                           <option value="Zimbabwe" {% if info.country == 'Zimbabwe' %} selected {% endif %}>Zimbabwe</option>
                           </select>
                       </div>
-                    </div>
-                    <div class="form-group row showcase_row_area mb-1">
-                      <h6 class="pl-5">Interests</h6>
-                    </div> 
-                    <div class="form-group row showcase_row_area mb-1">
-                      <div class="col-md-2 showcase_text_area">
-                        <label for="titleInput">Search Target </label>
-                      </div>
-                      <div class="col-md-8 showcase_content_area">
-                      <form method="POST">
-                        <input class="form-control" type="text" name="Search" id="targetSearchInput" placeholder="Input Target Name to Search">
-                      </form>
-                      </div>
-                      <button name="button" type="button" id="submitsearchTargetbtn"  class="btn btn-sm btn-primary" value="Search"><i class="mdi mdi-magnify mr-1"></i>Search</button>
-                    </div> 
-                    <div class="form-group row showcase_row_area">
-                      <div class="col-md-2 showcase_text_area">
-                        <label for="titleInput">Select Target</label>
-                      </div>
-                      <div class="col-md-8 showcase_content_area">
-                        <form>
-                          <input list="targetDataList" id="inputTargetDataList" class="form-control" type="text" name="name" >
-                             <datalist id = "targetDataList"> 
-                             </datalist>
-                        </form>
-                      </div>
-                      <button name="selectTargetbtn" type="button" id="selectTargetbtn" class="btn btn-sm btn-primary pr-4" value="Search"><i class="mdi mdi-arrow-right-bold-circle mr-1"></i> Select</button>    
-                    </div> 
-                    <div class="form-group row showcase_row_area" id="targetDiv">
-                  </div>
-                    <!-- <div class="form-group row showcase_row_area">
-                      <div class="col-md-2 showcase_text_area">
-                        <label for="interestInput">Interests</label>
-                      </div>
-                      <div class="col-md-10 showcase_content_area">
-                        <input type="text" class="form-control" id="interestInput" name="interest" placeholder="Interest" value="{{ interest }}" required>
-                      </div>
-                    </div> -->
+                    </div>                    
                     </fieldset>
                     <div class="form-group row showcase_row_area">
                       <div class="col-md-2 mr-2"></div>

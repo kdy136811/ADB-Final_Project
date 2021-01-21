@@ -193,13 +193,53 @@ $(".getTargetInfo").on("click", function(){
         });
       },
       error: function (error) {
-          console.log(`Error ${error}`);
+          console.log(error);
       }
     
     });
   }
 
 });
+
+$(".getTargetProjectInfo").on("click", function(){
+  var pid = $(this).parent().parent().parent().parent().parent().find('input[name = "PID"]').val();
+  if($(this).parent().parent().next().children().length==0){
+    var element = $(this).parent().parent().next();
+      $(element).append(`<div class="table-wrapper col-12">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Target Name</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>`);
+    element = $(element).find("tbody");
+    $.ajax({
+      url: '/getTargetForProjectInfo',
+      type: "POST",
+      data: {
+          PID: pid
+      },
+      dataType: "json",
+      success: function (data) {
+        $.each(data["project_targets"], function(i, item) {
+          $(element).append(`<tr><td>`+item.name+`</td><td>`+item.lat+`</td><td>`+item.lon+`</td></tr>`);
+        });
+      },
+      error: function (error) {
+          console.log(error);
+      }
+    
+    });
+  }
+
+});
+
 
 $(".getPMInfo").on("click", function(){
   var pid = $(this).parent().parent().parent().parent().parent().find('input[name = "PID"]').val();
@@ -277,10 +317,7 @@ $(".getJoinedEquipmentInfo").on("click", function(){
       success: function (data) {
         console.log(data["project_equipments"].length);
         if(data["project_equipments"].length == 0){
-          $(element).append(`<div class="alert alert-warning alert-dismissible fade show" role="alert">No one has joined this project yet<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>`);
+          $(element).append(`<div class="alert alert-warning fade show" role="alert">No one has joined this project yet</div>`);
         } else {
           $(element).append(`<div class="table-wrapper col-12">
       
@@ -608,16 +645,99 @@ $("#selectTargetbtn").on("click", function(){
 
 });
 
+$("#selectTargetbtnInterest").on("click", function(){
+  $.ajax({
+    async: false,
+    url: '/projects/targetDetails',
+    type: "POST",
+    data: {
+        targetName: $("#inputTargetDataList").val()
+    },
+    dataType: "json",
+    success: function (data) {      
+      var targetDetails = data["targetDetails"][0];
+      var element = `<div class="col-11 targetProjectAddList">
+      <fieldset disabled class="mb-3">
+        <div class="form-group row showcase_row_area">
+          <div class="col-md-3 showcase_text_area">
+            <label for="showSelectTargetName">Target Name</label>
+          </div>
+          <div class="col-md-9 showcase_content_area">
+            <input id="showSelectTargetName"  type="text" class="form-control"  placeholder="Target Name" value="`+$("#inputTargetDataList").val()+`">
+          </div>                         
+      </div>
+      <div>
+        <input type="hidden" id="hiddenSelectTargetID" type="number"  name="TID" value="`+targetDetails.TID+`">
+      </div>
+      </fieldset>
+  </div>
+    <div class="col-1">
+      <div>
+        <button class="btn btn-sm btn-danger mb-5 deleteTargetInterest" type="button"> <i class="mdi mdi-minus-circle "></i></button>
+      </div>
+    </div><hr mb-3>`;
+      
+    $("#targetInterestDiv").prepend(element);
+    $.ajax({
+      async: false,
+      url: '/accounts/addInterest',
+      type: "POST",
+      data: { 
+              TID: targetDetails.TID,
+      },
+      dataType: "json",
+      success: function (data) {
+        console.log(data);
+        $("#inputTargetDataList").val('');
+      },
+      error: function(error) {
+        console.log(error);
+      }
+    });
+
+    },
+    error: function (error) {
+        console.log(error);
+    }
+});
+
+});
+
+$("#targetInterestDiv").on("click", ".deleteTargetInterest", function(){
+  var tid = $(this).parent().parent().prev().find('input[name = "TID"]').val();
+  $(this).parent().parent().prev().remove();
+  $(this).parent().parent().prev().next();
+  $(this).parent().parent().remove();
+
+  $.ajax({
+    async: false,
+    url: '/accounts/deleteInterest',
+    type: "POST",
+    data: { 
+            TID: tid,
+    },
+    dataType: "json",
+    success: function (data) {
+      console.log(data);
+    },
+    error: function(error) {
+      console.log(error);
+    }
+  });
+
+
+});
+
 $("#targetDiv").on("click", ".deleteTarget", function(){
   $(this).parent().parent().prev().remove();
   $(this).parent().parent().next().remove();
   $(this).parent().parent().remove();
 });
 
-$("#targetDiv").on("click", ".deleteTarget", function(){
-  $(this).parent().parent().prev().remove();
-  $(this).parent().parent().remove();
-});
+// $("#targetDiv").on("click", ".deleteTarget", function(){
+//   $(this).parent().parent().prev().remove();
+//   $(this).parent().parent().remove();
+// });
 
 $("#submitCreateProjectbtn").on("click", function(){
   var myform = document.getElementById("createProjectForm");

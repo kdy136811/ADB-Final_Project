@@ -169,22 +169,27 @@ def delete_user_equipment(usr: str,uhaveid: int):
 
 
 def create_user_target(usr: str, TID: int):
-    query = "match (x:user{email:$usr}) match (t:target{TID:$TID}) create (x)-[ult:ULikeT{uliketid:uliketid}]->(t)"
+    query = "match (x:user{email:$usr}) match (t:target{TID:$TID}) create (x)-[ult:ULikeT{uliketid:$uliketid}]->(t)"
 
     count = graph.run("MATCH ()-[ult:UlikeT]->() return ult.uliketid order by ult.uliketid DESC limit 1 ").data()
     if len(count) == 0:
         cnt = 0
     else:
         cnt = count[0]['ult.uliketid']+1
+    print(TID, usr)
 
     graph.run(query, usr=usr, TID=TID, uliketid=cnt)
 
 
 def get_user_interest(usr: str):
-    query = "match (x:user{email:$usr})-[r:ULikeT]->(t) return t.name as name"
+    query = "match (x:user{email:$usr})-[r:ULikeT]->(t) return t.name as name, t.TID as TID"
     interest = graph.run(query, usr=usr).data()
 
     return interest
+
+def delete_user_insterest(usr: str, TID: int):
+    query = "match (x:user{email:$usr})-[r:ULikeT]->(t:target{TID:$TID}) delete r"
+    graph.run(query, usr=usr, TID=TID)
 
 def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accuracy:float,lim_magnitude:float,elevation_lim:float,mount_type:str,camera_type1:str,camera_type2:str,JohsonB:str,JohsonR:str,JohsonV:str,SDSSu:str,SDSSg:str,SDSSr:str,SDSSi:str,SDSSz:str)->Optional[Equipments]:
     # create an equipment
@@ -663,7 +668,7 @@ def fliter_project_target(usr: str, PID: int):
     #equipment = graph.run(query, usr = usr, PID = PID).data()
     project_target = graph.run("MATCH (p:project {PID: $PID})-[pht:PHaveT]->(t:target) " \
         " return pht.JohnsonB as JohnsonB, pht.JohnsonV as JohnsonV, pht.JohnsonR as JohnsonR, pht.SDSSu as SDSSu, pht.SDSSg as SDSSg, pht.SDSSr as SDSSr , pht.SDSSi as SDSSi, pht.SDSSz as SDSSz"
-    ", t.TID as TID, t.name as name, t.latitude as dec", PID = PID).data()
+    ", t.TID as TID, t.name as name, t.latitude as lat, t.longitude as lon", PID = PID).data()
     print(len(equipment))
     print(len(project_target))
     target = []
@@ -688,9 +693,9 @@ def fliter_project_target(usr: str, PID: int):
             if equipment[i]['sz'] == 'n':
                 if project_target[j]['SDSSz'] == 'y': continue
             # filter with equipment declination limit
-            if float(equipment[i]['declination']) <= 0 and float(project_target[j]['dec']) < float(equipment[i]['declination']):
+            if float(equipment[i]['declination']) <= 0 and float(project_target[j]['lat']) < float(equipment[i]['declination']):
                 continue
-            if float(equipment[i]['declination']) > 0 and float(project_target[j]['dec']) > float(equipment[i]['declination']):
+            if float(equipment[i]['declination']) > 0 and float(project_target[j]['lat']) > float(equipment[i]['declination']):
                 continue
 
             target.append(project_target[j])

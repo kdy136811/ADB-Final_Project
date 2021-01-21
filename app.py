@@ -125,7 +125,7 @@ def manageProject():
     else:
         return redirect(url_for("login_get"))
 
-#created for ajax to get target for project on dashboard
+#created for ajax to get target for projects on dashboard
 @app.route('/getTargetInfo', methods=['POST'])
 def getTargetInfo():
     if "usr" in session:
@@ -133,6 +133,17 @@ def getTargetInfo():
         session["usr"] = usr
         hid = request.form.get('PID').strip()
         project_target = fliter_project_target(usr, int(hid))
+        return jsonify(project_targets = project_target)
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/getTargetForProjectInfo', methods=['POST'])
+def getTargetForProjectInfo():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        hid = request.form.get('PID').strip()
+        project_target = get_project_target(int(hid))
         return jsonify(project_targets = project_target)
     else:
         return redirect(url_for("login_get"))
@@ -180,13 +191,35 @@ def profile_post():
     else:
         return redirect(url_for("login_get"))
 
+@app.route('/accounts/interests', methods=['GET'])
+def viewInterest():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        user_profile = get_profile(usr)
+        interests = get_user_interest(usr)
+        return render_template("accounts/interests.html", user_profile=user_profile, interests=interests)
+    else:
+        return redirect(url_for("login_get"))
+
 @app.route('/accounts/addInterest', methods=['POST'])
 def addInterest():
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
         TID = request.form.get('TID')
-        create_user_target(usr, TID)
+        create_user_target(usr, int(TID))
+        return jsonify(success = "Success")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/deleteInterest', methods=['POST'])
+def delInterest():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        TID = request.form.get('TID')
+        delete_user_insterest(usr, int(TID))
         return jsonify(success = "Success")
     else:
         return redirect(url_for("login_get"))
