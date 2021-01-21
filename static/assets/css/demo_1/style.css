@@ -528,5 +528,14 @@ footer {
 
 .table-wrapper thead th{
   position: sticky; top: 0;
+  background-color: #FFF;
+}
+
+dl{
+  font-size: 13px;
+}
+
+dt{
+  font-weight: 500;
 }
 /*# sourceMappingURL=style.css.map */

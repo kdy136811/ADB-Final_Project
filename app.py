@@ -128,9 +128,15 @@ def manageProject():
 #created for ajax to get target for project on dashboard
 @app.route('/getTargetInfo', methods=['POST'])
 def getTargetInfo():
-    hid = request.form.get('PID').strip()
-    project_target = get_project_target(int(hid))
-    return jsonify(project_targets = project_target)
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        hid = request.form.get('PID').strip()
+        project_target = fliter_project_target(usr, int(hid))
+        return jsonify(project_targets = project_target)
+    else:
+        return redirect(url_for("login_get"))
+
 
 @app.route('/getJoinedEquipmentInfo', methods=['POST'])
 def getJoinedEquipmentInfo():
@@ -160,7 +166,7 @@ def profile_get():
 def profile_post():
     # Get the data from index.html
     username = request.form.get('username').strip()
-    name = request.form.get('name')
+    name = request.form.get('name').strip()
     affiliation = request.form.get('affiliation').strip()
     title = request.form.get('title').strip()
     country = request.form.get('country').strip()
@@ -171,6 +177,17 @@ def profile_post():
         user_profile = update_profile(usr, username, name, affiliation, title, country)
         user_profile = get_profile(usr)
         return render_template("accounts/profile.html", user_profile=user_profile)
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/addInterest', methods=['POST'])
+def addInterest():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        TID = request.form.get('TID')
+        create_user_target(usr, TID)
+        return jsonify(success = "Success")
     else:
         return redirect(url_for("login_get"))
 

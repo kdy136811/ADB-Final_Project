@@ -9,7 +9,6 @@ import numpy as np
 import time
 
 
-half_day = TimeDelta(0.5, format='jd')
 ## Note: Currently, no Sun observation, twilight observation allowed.
 
 def site_information(UhaveE_ID, longitude, latitude, altitude):
@@ -25,7 +24,7 @@ def target_information(TID, ra, dec):
     return target
 
 
-def observable_time_range(calculation_time, site_inf, target, elevation_limit):
+def observable_time_range(calculation_time, site_inf, target, elevation_limit, half_day):
     elevation_limit = elevation_limit*u.deg
     if site_inf.is_night(calculation_time, horizon=-18*u.deg) == False:
         t_dusk = site_inf.twilight_evening_astronomical(calculation_time, which="next")
@@ -220,30 +219,32 @@ def observable_time_range(calculation_time, site_inf, target, elevation_limit):
     return t_start, t_end
 
 
-UhaveE_ID = 1
-latitude = 19.825
-longitude = -155.4761
-altitude = 4200
-elevation_limit = 20
+# UhaveE_ID = 1
+# latitude = 19.825
+# longitude = -155.4761
+# altitude = 4200
+# elevation_limit = 20
 
-# Target Informaiton
-TID = 1
-ra = 90.752
-dec = -16.716
+# # Target Informaiton
+# TID = 1
+# ra = 90.752
+# dec = -16.716
 
-def run(UhaveE_ID, longitude, latitude, altitude, elevation_limit, TID, ra, dec):
+def run(UhaveE_ID, longitude, latitude, altitude, elevation_limit, TID, ra, dec, calculation_time):
+    half_day = TimeDelta(0.5, format='jd')
+
     start_time = time.time()
 
     site_inf = site_information(UhaveE_ID, longitude, latitude, altitude)
     
-    calculation_time = datetime.now()
+    #calculation_time = datetime.now()
     #calculation_time = datetime.fromisoformat('2020-12-21T20:05:00')
     calculation_time = site_inf.datetime_to_astropy_time(calculation_time)
     calculation_time = Time(calculation_time, format='fits', scale='utc')
     
     #site_inf = site_information(UhaveE_ID, longitude, latitude, altitude)
     target = target_information(TID, ra, dec)
-    t_start, t_end = observable_time_range(calculation_time, site_inf, target, elevation_limit)
+    t_start, t_end = observable_time_range(calculation_time, site_inf, target, elevation_limit, half_day)
     
     try:
         t_start.format = 'fits'
@@ -256,7 +257,7 @@ def run(UhaveE_ID, longitude, latitude, altitude, elevation_limit, TID, ra, dec)
 
     end_time = time.time()
     
-    print("--- %s seconds ---\n" % (end_time - start_time))
-    print('start observation: %s \nend observation %s' % (t_start, t_end))
+    # print("--- %s seconds ---\n" % (end_time - start_time))
+    # print('start observation: %s \nend observation %s' % (t_start, t_end))
 
     return t_start, t_end

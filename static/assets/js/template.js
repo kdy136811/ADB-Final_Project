@@ -216,28 +216,27 @@ $(".getPMInfo").on("click", function(){
       success: function (data) {
         $.each(data["project_manager"], function(i, item) {
           $(element).append(`<div class="card-body">
-          <div class="form-group row showcase_row_area">
-            <div class="col-md-1 showcase_text_area">
-              <label>Name:</label>
-            </div>
-            <div class="col-md-3 showcase_content_area">
-              <label>`+item.name+`</label>
-            </div>
-            <div class="col-md-2 showcase_text_area">
-              <label>Affiliation:</label>
-            </div>
-            <div class="col-md-2 showcase_content_area">
-              <label>`+item.affiliation+`
-              </label>
-            </div>
-            <div class="col-md-2 showcase_text_area">
-              <label>Title:</label>
-            </div>
-            <div class="col-md-2 showcase_content_area">
-              <label>`+item.title+`
-              </label>
-            </div>
-          </div>
+          <dl class="form-group row showcase_row_area">
+            <dt class="col-auto">Name: 
+            </dt>
+            <dd class="col-auto">
+              `+item.name+`
+            </dd>
+            <dt class="col-auto">
+              Affiliation:
+            </dt>
+            <dd class="col-auto">
+              `+item.affiliation+`
+              
+            </dd>
+            <dt class="col-auto">
+              Title:
+            </dt>
+            <dd class="col-auto">
+              `+item.title+`
+              
+            </dd>
+          </dl>
         </div>`);
         });
       },
@@ -250,24 +249,24 @@ $(".getPMInfo").on("click", function(){
 
 });
 
+function toTitleCase(str) {
+  return str.replace(/(?:^|\s)\w/g, function(match) {
+      return match.toUpperCase();
+  });
+}
+
+function toYesorNo(str){
+  if(str.toLowerCase(str)=="y"){
+    return "Yes";
+  }else{
+    return "No";
+  }
+}
+
 $(".getJoinedEquipmentInfo").on("click", function(){
   var pid = $(this).parent().parent().parent().parent().parent().find('input[name = "PID"]').val();
   if($(this).parent().parent().next().children().length==0){
     var element = $(this).parent().parent().next();
-    //   $(element).append(`<div class="table-wrapper col-12">
-    //   <table class="table">
-    //     <thead>
-    //       <tr>
-    //         <th>Target Name</th>
-    //         <th>Latitude</th>
-    //         <th>Longitude</th>
-    //       </tr>
-    //     </thead>
-    //     <tbody>
-    //     </tbody>
-    //   </table>
-    // </div>`);
-    // element = $(element).find("tbody");
     $.ajax({
       url: '/getJoinedEquipmentInfo',
       type: "POST",
@@ -283,121 +282,88 @@ $(".getJoinedEquipmentInfo").on("click", function(){
       </button>
     </div>`);
         } else {
+          $(element).append(`<div class="table-wrapper col-12">
+      
+    </div>`);
+    element = $(element).find(".table-wrapper");
          $.each(data["project_equipments"], function(i, item) {
-           $(element).append(`
-               <div class="form-group row showcase_row_area">       
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="siteInput">Aperture</label>
-                 </div>
-                 <div class="col-md-10 showcase_content_area">
-                   <label type="text" class="form-control">`+item.aperture+`</label>
-                 </div> 
-               </div>
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="trackingInput">Tracking Accuracy</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                  <label type="text" class="form-control">`+item.accuracy+`</label>
-                 </div>  
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="mountSelect">Mount Type</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.mount_type+`</label>
-                 </div>           
-               </div>
-               <div class="form-group row showcase_row_area"> 
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="fovInput">FoV</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.Fov+`</label>
-                 </div> 
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="limitingInput">Limiting Magnitude</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.lim_magnitude+`</label>
-                 </div> 
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="pxInput">Pixel Scale</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.pixel_scale+`</label>
-                 </div>
-               </div>
-               <div class="form-group row showcase_row_area">
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="elevationInput">Elevation Limit</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.elevation_lim+`</label>
-                 </div>                          
-               </div>
-               <div class="form-group row showcase_row_area">
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="johnsonBInput">Johnson B</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                    <label type="text" class="form-control">`+item.JohnsonB+`</label>
-                 </div>
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="johnsonVInput">Johnson V</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.JohnsonV+`</label>
-                 </div> 
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="johnsonRInput">Johnson R</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.JohnsonR+`</label>
-                 </div>
-               </div>
-               <div class="form-group row showcase_row_area">  
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="sdssuInput">SDSS u</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.SDSSu+`</label>
-                 </div>              
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="sdssgInput">SDSS g</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.SDSSg+`</label>
-                 </div>
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="sdssrInput">SDSS r</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.SDSSr+`</label>
-                 </div>                  
-               </div>
-               <div class="form-group row showcase_row_area">
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="sdssiInput">SDSS i</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.SDSSi+`</label>
-                 </div>
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="sdsszInput">SDSS z</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.SDSSz+`</label>
-                 </div>                  
-               </div>
-               <div class="form-group row showcase_row_area">
-                 <div class="col-md-2 showcase_text_area">
-                   <label for="cameraInput">Camera Type</label>
-                 </div>
-                 <div class="col-md-2 showcase_content_area">
-                 <label type="text" class="form-control">`+item.camera_type1+`,`+item.camera_type2+`</label>
-                 </div>
-              </div>       
-               </div>
-               </div>`);
+           $(element).append(`<div class="pl-3 pt-2"><p><strong>Equipment Number `+parseInt(i+1)+` Details</strong></p></div>
+           <div class="pl-5">
+           <div class="form-group row showcase_row_area">
+           <div class="col-md-4"> 
+               <label for="siteInput">Aperture: </label>
+               <label type="text">`+item.aperture+`</label>
+             </div>
+             <div class="col-md-4"> 
+               <label for="trackingInput">Tracking Accuracy: </label>
+              <label type="text">`+item.accuracy+`</label>
+             </div>
+             <div class="col-md-4"> 
+               <label for="mountSelect">Mount Type: </label>
+             <label type="text">`+toTitleCase(item.mount_type)+`</label>
+             </div>  
+           </div>
+           <div class="form-group row showcase_row_area"> 
+           <div class="col-md-4"> 
+               <label for="fovInput">FoV: </label>
+             <label type="text">`+item.Fov+`</label>
+            </div> 
+            <div class="col-md-4"> 
+               <label for="limitingInput">Limiting Magnitude: </label>
+              <label type="text">`+item.lim_magnitude+`</label>
+             </div> 
+             <div class="col-md-4"> 
+               <label for="pxInput">Pixel Scale: </label>
+              <label type="text">`+item.pixel_scale+`</label>
+             </div>
+           </div>
+           <div class="form-group row showcase_row_area">
+           <div class="col-md-4"> 
+               <label for="elevationInput">Elevation Limit: </label>
+             <label type="text">`+item.elevation_lim+`</label>
+             </div>     
+             <div class="col-md-4"> 
+               <label for="cameraInput">Camera Type: </label>
+             <label type="text">`+toTitleCase(item.camera_type1)+`, `+toTitleCase(item.camera_type2)+`</label>
+             </div>                     
+           </div>
+           <div class="form-group row showcase_row_area">
+           <div class="col-md-3">
+               <label for="johnsonBInput">Johnson B:</label>
+                <label type="text">`+toYesorNo(item.JohnsonB)+`</label>
+             </div>
+             <div class="col-md-3">
+               <label for="johnsonVInput">Johnson V:</label>
+             <label type="text">`+toYesorNo(item.JohnsonV)+`</label>
+             </div> 
+             <div class="col-md-3">
+               <label for="johnsonRInput">Johnson R:</label>
+             <label type="text">`+toYesorNo(item.JohnsonR)+`</label>
+             </div>
+             <div class="col-md-3">
+             <label for="sdssuInput">SDSS u: </label>
+             <label type="text">`+toYesorNo(item.SDSSu)+`</label>
+             </div>
+           </div>
+           <div class="form-group row showcase_row_area">                  
+           <div class="col-md-3">
+               <label for="sdssgInput">SDSS g: </label>
+             <label type="text">`+toYesorNo(item.SDSSg)+`</label>
+             </div>
+             <div class="col-md-3">
+               <label for="sdssrInput">SDSS r: </label>
+             <label type="text">`+toYesorNo(item.SDSSr)+`</label>
+             </div> 
+             <div class="col-md-3">
+             <label for="sdssiInput">SDSS i: </label>
+             <label type="text">`+toYesorNo(item.SDSSi)+`</label>
+             </div>
+             <div class="col-md-3"> 
+             <label for="sdsszInput">SDSS z: </label>
+             <label type="text">`+toYesorNo(item.SDSSz)+`</label>
+             </div>                
+           </div></div><hr>`);
+              
          });
         }
       },
@@ -630,7 +596,7 @@ $("#selectTargetbtn").on("click", function(){
       <div>
         <button class="btn btn-sm btn-danger mb-5 deleteTarget"> <i class="mdi mdi-minus-circle "></i></button>
       </div>
-    </div>`;
+    </div><hr mb-3>`;
       
     $("#targetDiv").prepend(element);
 
@@ -644,6 +610,7 @@ $("#selectTargetbtn").on("click", function(){
 
 $("#targetDiv").on("click", ".deleteTarget", function(){
   $(this).parent().parent().prev().remove();
+  $(this).parent().parent().next().remove();
   $(this).parent().parent().remove();
 });
 
@@ -694,7 +661,7 @@ $("#submitCreateProjectbtn").on("click", function(){
           success: function (data) {
             console.log("Target: ");
             console.log(data["target"][0]["pht.phavetid"]);
-            $("#addProjectForm").reset();
+            location.reload();
             $("#addProjectForm").prepend(`<div class="alert alert-success alert-dismissible fade show" role="alert">Project successfully created!<button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
