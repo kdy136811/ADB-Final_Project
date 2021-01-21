@@ -9265,7 +9265,8 @@ table {
   margin: 0 auto;
   width: 150px; }
   .logo img {
-    width: 100%; }
+    width: 100%;
+  background-color: #72cbae; }
 
 .grid {
   background: #fff;
