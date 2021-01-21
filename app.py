@@ -79,6 +79,33 @@ def login_post():
     session["usr"] = usr
     return redirect(url_for("dashboard_get"))
 
+@app.route('/accounts/map.html', methods=['GET'])
+def map_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        return render_template("accounts/map.html")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/map.html', methods=['POST'])
+def map_post():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        return render_template("accounts/map.html")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/friends', methods=['GET'])
+def viewFriends():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        return render_template("accounts/friends.html")
+    else:
+        return redirect(url_for("login_get"))
+
 @app.route('/accounts/index', methods=['GET'])
 def dashboard_get():
     # Make sure the user has an active session.  If not, redirect to the login page.
