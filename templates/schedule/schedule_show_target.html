@@ -4,6 +4,11 @@
 
 <div class="main">
     <div class="form-wrapper">
+      <form method="POST">
+      <div class="actions">
+        <button name="button" type="submit" class="bt btn-info btn-sm" value="save">Save</button>
+      </div>
+      </form>
             <h2>Target</h2>
                 {%for info in target_observe_time%}    
                 <h4>target {{loop.index}}</h4>

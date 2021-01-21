@@ -394,7 +394,7 @@ def auto_join(usr: str, PID: int):
 
     # create equipment-project relationship
     qualified_eid_list = get_qualified_equipment(usr, PID)
-    query = "CREATE (p:project {PID:$PID})-[rel:PhaveE {phaveeid:$phaveeid}]->(e:equipments {EID:$EID})"
+    query = "MATCH (p:project {PID:$PID}) MATCH (e:equipments {EID:$EID}) CREATE (p)-[rel:PhaveE {phaveeid:$phaveeid}]->(e)"
 
     for i in range(len(qualified_eid_list)):
         count = graph.run("MATCH ()-[rel:PhaveE]->() return rel.phaveeid order by rel.phaveeid DESC limit 1").data()
@@ -547,6 +547,15 @@ def get_project_member(usr: str, PID: int):
     member = graph.run(query, PID =PID).data()
     return member
 
+def get_project_equipment(PID: int):
+    # return the equipments in this project
+    query = "MATCH (e:equipments)-[rel:Member_of]->(p:project {PID: $PID}) return e.EID as eid, " \
+        "e.aperture as aperture, e.Fov as Fov, e.pixel_scale as pixel_scale, e.tracking_accuracy as accuracy, e.lim_magnitude as lim_magnitude, e.elevation_lim as elevation_lim," \
+        "e.mount_type as mount_type, e.camera_type1 as camera_type1, e.camera_type2 as camera_type2, e.JohnsonB as JohnsonB, e.JohnsonR as JohnsonR, e.JohnsonV as JohnsonV, e.SDSSu as SDSSu," \
+        "e.SDSSg as SDSSg, e.SDSSr as SDSSr, e.SDSSi as SDSSi,e.SDSSz as SDSSz"
+    eq_list = graph.run(query, PID =PID).data()
+    return eq_list
+
 def get_project_join(usr: str):
     #get all the project user have already joinied
     query = "MATCH (x:user {email:$usr})-[rel:Member_of]->(p:project) return p.PID as PID, p.title as title"
@@ -688,7 +697,7 @@ def load_schedule(uhaveid: int):
     new_observe_section, current_time = get_night_time(uhaveid)
 
     # find the schedule
-    query_schedule = "MATCH (e:equipments{EID:$EID})-[r:EhaveS]->(s:schedule) return s.observe_section as observe_section s.last_update as last_update"
+    query_schedule = "MATCH (e:equipments{EID:$EID})-[r:EhaveS]->(s:schedule) return s.observe_section as observe_section, s.last_update as last_update"
     result = graph.run(query_schedule, EID=EID).data()
     old_observe_section = result[0]['observe_section']
     previous_time = result[0]['last_update']
@@ -723,7 +732,7 @@ def get_eid(uhaveid):
     query_eid = "MATCH (x:user)-[h:UhaveE{uhaveid:$uhaveid}]->(e:equipments) return e.EID as EID"
     eid = graph.run(query_eid, uhaveid=uhaveid).data()
 
-    eid = int(uhid[0]['EID'])
+    eid = int(eid[0]['EID'])
 
     return eid
 
@@ -746,7 +755,7 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
             index = 0
         else:
             index += 1
-    print(current_hour_array)
+    #print(current_hour_array)
     
     # get information from uhavee and equipment table
     query_relation = "MATCH (x:user)-[h:UhaveE{uhaveid:$uhaveid}]->(e:equipments) return h.longitude as longitude, h.latitude as latitude, h.altitude as altitude, e.elevation_lim as elevation_lim"
@@ -760,8 +769,9 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
     # get target information and run the ta's schedule function
     format = '%Y-%m-%d %H:%M:%S'
     # tid_list = [856, 266, 377, 488, 5, 100, 348, 7]
-
+    
     target_data = []
+    print(len(tid_list))
     for i in range(len(tid_list)):
         # create observation array
         observe = [0]*24
@@ -775,7 +785,8 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
         name = str(tar_info[0]['name'])
 
         t_start, t_end = schedule.run(uhaveid, longitude, latitude, altitude, elevation_lim, tid, ra, dec, current_time)
-        # print('start observation: %s \nend observation %s' % (t_start, t_end))
+        print(tid)
+        print('start observation: %s \nend observation %s' % (t_start, t_end))
 
         if str(t_start) != 'nan' and str(t_end)  != 'nan':
             t1 = str(t_start).split('.')[0].replace("T", " ")

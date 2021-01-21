@@ -5,3 +5,4 @@ passlib
 astropy
 astroplan
 ephem
+psycopg2
