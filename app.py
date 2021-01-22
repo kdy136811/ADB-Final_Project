@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, session, url_for, flash, req
 from data.db_session import db_auth
 #from services.accounts_service import create_user, login_user, get_profile, update_profile
 from services.accounts_service import *
+from services.postgres_service import *
 import os
 import ast
 
@@ -190,6 +191,8 @@ def equipments_post():
             equipments = create_equipments(aperture,Fov,pixel_scale,tracking_accuracy,lim_magnitude,elevation_lim,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
             print(equipments.EID)
             user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution)
+            # create spatial user equipment
+            postgres_create_user_equipments(user_equipments.UID,user_equipments.id, equipments.EID,Longitude,Latitude,Altitude)
             #print('add')
         if request.form.get('button') == 'delete':
             delete_user_equipment(usr,int(hid))
@@ -368,6 +371,7 @@ def schedule_choose_project_get():
         usr = session["usr"]
         session["usr"] = usr
         join_list = get_project_join(usr)  # retrun the project which user joined
+        SID = request.args.get('SID')
         project_list = get_project_join_filter(join_list,usr,int(request.args.get('uhaveid'))) #return the project satisify requirement 
         SID = request.args.get('SID')
         time = request.args.get('time')
@@ -495,7 +499,8 @@ def schedule_show_target_post():
             tmp.close()
         #if request.form.get('button') == 'delete': # delete a target from current schedule
         if request.form.get('button') == 'save':  # save the schedule into schedule node, and delete the schedule_tmp file
-            tmp = open('schedule_tmp','r')
+            print('save')
+            tmp = open(filename,'r')
             data = tmp.read()
             data = ast.literal_eval(data)
             tmp.close()

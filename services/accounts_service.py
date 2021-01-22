@@ -74,6 +74,32 @@ def update_profile(usr: str, username: str, name: str, affiliation: str, title: 
     return user_profile
 
 
+def add_friend(usr: str, f_UID: int):
+    query1 = "match (x:user{email:$usr}) match (f:user{UID:$UID}) create (x)-[r:Friend{FID:$FID}]->(f)"
+    query2 = "match (x:user{UID:$UID}) match (f:user{email:$usr}) create (x)-[r:Friend{FID:$FID}]->(f)"
+    count = graph.run("MATCH (x:user)-[r:Friend]->(f:user) return r.FID as FID order by FID DESC limit 1").data()
+    if len(count) == 0:
+        cnt = 0
+    else:
+        cnt = count[0]['FID']+1
+    
+    graph.run(query1, usr=usr, UID=f_UID, FID=cnt)
+    graph.run(query2, UID=f_UID, usr=usr, FID=cnt+1)
+
+def view_friend(usr: str):
+    query = "MATCH (x:user{email:$usr})-[r:Friend]->(f:user) return f.affiliation as affiliation, f.country as country, f.email as email, f.name as name, f.title as title, f.username as username"
+    friend = graph.run(query, usr=usr).data()
+
+    return friend
+
+def delete_friend(usr: str, f_UID: int):
+    query1 = "MATCH (x:user{email:$usr})-[r:Friend]->(f:user{UID:$UID}) delete r"
+    query2 = "MATCH (x:user{UID:$UID})-[r:Friend]->(f:user{email:$usr}) delete r"
+
+    graph.run(query1, usr=usr, UID=f_UID)
+    graph.run(query2, UID=f_UID, usr=usr)
+
+
 def count_user_equipment(usr: str)->int:
     count = graph.run("MATCH (x:user {email:$usr})-[:UhaveE]->(:equipments) return count(*)",usr=usr).evaluate()
     return count
@@ -136,7 +162,12 @@ def update_declination(uhaveid):
 
 
 def delete_user_equipment(usr: str,uhaveid: int):
-    #delete user's equipment
+    # delete the schedule first
+    eid = get_eid(uhaveid)
+    graph.run("MATCH (e:equipments {EID:$EID})-[r:EhaveS]->(s:schedule) DELETE r,s", EID=eid)
+    # delete the project-equipment relationship
+    graph.run("match (p:project)-[r:PhaveE]->(e:equipments{EID:$EID}) DELETE r", EID=eid)
+    # delete user's equipment
     graph.run("MATCH (x:user {email:$usr})-[h:UhaveE {uhaveid: $uhaveid}]->(e:equipments) DELETE h,e", usr=usr, uhaveid=uhaveid)
 
 
@@ -151,6 +182,12 @@ def create_user_target(usr: str, TID: int):
 
     graph.run(query, usr=usr, TID=TID, uliketid=cnt)
 
+
+def get_user_interest(usr: str):
+    query = "match (x:user{email:$usr})-[r:ULikeT]->(t) return t.name as name"
+    interest = graph.run(query, usr=usr).data()
+
+    return interest
 
 def create_equipments(aperture:float,Fov:float,pixel_scale:float,tracking_accuracy:float,lim_magnitude:float,elevation_lim:float,mount_type:str,camera_type1:str,camera_type2:str,JohsonB:str,JohsonR:str,JohsonV:str,SDSSu:str,SDSSg:str,SDSSr:str,SDSSi:str,SDSSz:str)->Optional[Equipments]:
     # create an equipment
@@ -397,7 +434,7 @@ def auto_join(usr: str, PID: int):
 
     # create equipment-project relationship
     qualified_eid_list = get_qualified_equipment(usr, PID)
-    query = "CREATE (p:project {PID:$PID})-[rel:PhaveE {phaveeid:$phaveeid}]->(e:equipments {EID:$EID})"
+    query = "MATCH (p:project {PID:$PID}) MATCH (e:equipments {EID:$EID}) CREATE (p)-[rel:PhaveE {phaveeid:$phaveeid}]->(e)"
 
     for i in range(len(qualified_eid_list)):
         count = graph.run("MATCH ()-[rel:PhaveE]->() return rel.phaveeid order by rel.phaveeid DESC limit 1").data()
@@ -406,6 +443,19 @@ def auto_join(usr: str, PID: int):
         else:
             cnt = count[0]['rel.phaveeid']+1
         graph.run(query, PID=PID, EID=qualified_eid_list[i], phaveeid=cnt)
+
+
+def auto_leave(usr: str, PID: int):
+    # delete user-project relationship
+    query_user_bye = "MATCH (x:user {email:$usr})-[rel:Memberof]->(p:project{PID:$PID}) delete rel"
+    graph.run(query_user_bye, usr=usr, PID=PID)
+
+    # delete project-equipment relationship
+    qualified_eid_list = get_qualified_equipment(usr, PID)
+    query_equipment_bye = "MATCH (p:project {PID:$PID})-[rel:PhaveE]->(e:equipments{EID:$EID}) delete rel"
+    
+    for i in range(len(qualified_eid_list)):
+        graph.run(query_equipment_bye, PID=PID, EID=qualified_eid_list[i])
 
 
 def apply_project(usr: str,PID: int)->int:
@@ -549,6 +599,15 @@ def get_project_member(usr: str, PID: int):
     query = "MATCH (x:user)-[rel:Member_of]->(p:project {PID: $PID}) return  x.name as name"
     member = graph.run(query, PID =PID).data()
     return member
+
+def get_project_equipment(PID: int):
+    # return the equipments in this project
+    query = "MATCH (e:equipments)-[rel:Member_of]->(p:project {PID: $PID}) return e.EID as eid, " \
+        "e.aperture as aperture, e.Fov as Fov, e.pixel_scale as pixel_scale, e.tracking_accuracy as accuracy, e.lim_magnitude as lim_magnitude, e.elevation_lim as elevation_lim," \
+        "e.mount_type as mount_type, e.camera_type1 as camera_type1, e.camera_type2 as camera_type2, e.JohnsonB as JohnsonB, e.JohnsonR as JohnsonR, e.JohnsonV as JohnsonV, e.SDSSu as SDSSu," \
+        "e.SDSSg as SDSSg, e.SDSSr as SDSSr, e.SDSSi as SDSSi,e.SDSSz as SDSSz"
+    eq_list = graph.run(query, PID =PID).data()
+    return eq_list
 
 def get_project_join(usr: str):
     #get all the project user have already joinied
@@ -762,8 +821,9 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
     # get target information and run the ta's schedule function
     format = '%Y-%m-%d %H:%M:%S'
     # tid_list = [856, 266, 377, 488, 5, 100, 348, 7]
-
+    
     target_data = []
+    print(len(tid_list))
     for i in range(len(tid_list)):
         print(i)        
         # create observation array
@@ -778,7 +838,8 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
         name = str(tar_info[0]['name'])
 
         t_start, t_end = schedule.run(uhaveid, longitude, latitude, altitude, elevation_lim, tid, ra, dec, current_time)
-        # print('start observation: %s \nend observation %s' % (t_start, t_end))
+        print(tid)
+        print('start observation: %s \nend observation %s' % (t_start, t_end))
 
         if str(t_start) != 'nan' and str(t_end)  != 'nan':
             t1 = str(t_start).split('.')[0].replace("T", " ")
