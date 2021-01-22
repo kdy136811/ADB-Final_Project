@@ -348,10 +348,58 @@ def get_project(usr: str)->Optional[Project]:
         #"n.SDSSg as SDSSg, n.SDSSr as SDSSr, n.SDSSi as SDSSi, n.SDSSz as SDSSz, n.PID as PID ORDER BY n.PID"
     #project = graph.run(query, usr = usr).data()
     # print(result)
+
+    result = get_project_filter(usr, result)
+
     return result
 
+def get_project_filter(usr: str, project_list: list):
+    random.shuffle(project_list)
+    interest = get_user_interest(usr)
+
+    chosen_project = []
+
+    find = 0
+    for project in project_list:
+        find = 0
+        project_target = get_project_target(project['PID'])
+        for t in project_target:
+            for i in interest:
+                if i['TID'] == t['TID']:
+                    chosen_project.append(project)
+                    find = 1
+                    break
+            if len(chosen_project) > 10 or find == 1:
+                break
+        if len(chosen_project) > 10 or find == 1:
+            break
+
+    plen = len(project_list)
+    if plen < 10:
+        goal = plen
+    else:
+        goal = 10
+
+    exist = 0
+    if len(chosen_project) < goal:
+        for i in range(goal-len(chosen_project)):
+            while True:
+                exist = 0
+                rand_index = random.randint(0, plen-1)
+                rand_pid = project_list[rand_index]['PID']
+                for chosen in chosen_project:
+                    if chosen['PID'] == rand_pid:
+                        exist = 1
+                        break
+                if exist == 0:
+                    break
+            chosen_project.append(project_list[rand_index])
+
+    return chosen_project
+
+
 def get_project_target(pid: int):
-    query = "MATCH x=(p:project{PID:$pid})-[r:PHaveT]->(t:target) RETURN t.name as name, t.latitude as lat, t.longitude as lon"
+    query = "MATCH x=(p:project{PID:$pid})-[r:PHaveT]->(t:target) RETURN t.name as name, t.latitude as lat, t.longitude as lon, t.TID as TID"
     project_target = graph.run(query, pid=pid).data()
     return project_target
 
