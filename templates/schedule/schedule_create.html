@@ -9,7 +9,7 @@
                   {%for info in user_equipments%}    
              <form method="post">
                 <input class="form-control" type="hidden" name='uhaveid' value="{{info.id}}" >
-                <input class="form-control" type="text" name="site" placeholder=" Site" value="{{ info.site }}"onmouseover="display()" onmouseout="disappear()" >
+                <input class="form-control" type="text" name="site" placeholder=" Site" value="{{ info.site }}" >
                 <input class="form-control" type="text" name="latitude" placeholder=" Latitude" value="{{ info.latitude }}">
                 <input class="form-control" type="text" name="longitude" placeholder=" Longitude" value="{{ info.longitude }}">
                 <input class="form-control" type="text" name="latitude" placeholder=" Latitude" value="{{ info.latitude }}">

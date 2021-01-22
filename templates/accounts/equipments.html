@@ -3,39 +3,13 @@
 {% block main_content %}
 
 <div class="main">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <style type="text/css">
-        <!--
-            #box{
-                display:none;
-                width: 315px;
-                height: 180px; 
-                background:#CCC;
-                border:1px solid #333;
-                padding:12px;
-                text-align:center;
-                }
-         -->
-        </style>
-        <script type="text/javascript" language="javascript" >
-        <!--
-        function display(){
-        document.getElementById("box").style.display="block"; 
-        }
-        function disappear(){
-        document.getElementById("box").style.display="none"; 
-        }
-        -->
-        </script>
-    </head>
     <div class="form-wrapper">
         <form method="post">
             <h2>Add new equipments</h2>
                 <input class="form-control" type="hidden" name='uhaveid' >
                 <input class="form-control" type="text" name="site" placeholder=" Site" >
-                <input class="form-control" type="text" name="longitude" placeholder=" Longitude" >
-                <input class="form-control" type="text" name="latitude" placeholder=" Latitude" >
+                <input class="form-control" type="text" id="lng" name="longitude" placeholder=" Longitude" >
+                <input class="form-control" type="text" id="lat" name="latitude" placeholder=" Latitude" >
                 <input class="form-control" type="text" name="altitude" placeholder=" Altitude" >
                 <input class="form-control" type="text" name="time_zone" placeholder=" Time zone" >
                 <input class="form-control" type="text" name="daylight_saving" placeholder=" Daylight saving" >
@@ -61,6 +35,7 @@
                 <input class="form-control" type="text" name="SDSSz" placeholder="  SDSS z" >
             <div class="actions">
                 <button name="button" type="submit" class="bt btn-info btn-sm" value="add">Add New Equipments</button>
+                <button name="button" id ="Showmap" type="button" class="bt btn-info btn-sm" value="location">Choose Location</button>
             </div>
         
         <div class="error-msg">

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, session, url_for, flash, request
+from flask import Flask, render_template, redirect, session, url_for, flash, request,jsonify
 from data.db_session import db_auth
 #from services.accounts_service import create_user, login_user, get_profile, update_profile
 from services.accounts_service import *
@@ -112,6 +112,24 @@ def profile_post():
     else:
         return redirect(url_for("login_get"))
 
+@app.route('/accounts/map.html', methods=['GET'])
+def map_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        return render_template("accounts/map.html")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/map.html', methods=['POST'])
+def map_post():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        return render_template("accounts/map.html")
+    else:
+        return redirect(url_for("login_get"))
+
 @app.route('/accounts/equipments', methods=['GET'])
 def equipments_get():
     if "usr" in session:
@@ -160,6 +178,9 @@ def equipments_post():
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
+        if request.form.get('button') == 'location':
+            print("location")
+            return render_template("accounts/map.html")
         if request.form.get('button') == 'update':
             print(hid)
             user_equipments = update_user_equipments(aperture,Fov,pixel_scale,tracking_accuracy,lim_magnitude,elevation_lim,mount_type,camera_type1,
@@ -335,23 +356,11 @@ def schedule_create_post():
         user_equipments = get_user_equipments(usr)
         if request.form.get('button') == "Choose":
             uhaveid = request.form.get('uhaveid').strip()
-            # load_schedule(int(uhaveid))  #get SID from this function,and pass down
-            return redirect(url_for("schedule_choose_project_get", uhaveid  = int(uhaveid))) #pass SID
+            update_schedule, time, SID = load_schedule(int(uhaveid))  #get SID from this function,and pass down
+            return redirect(url_for("schedule_choose_project_get", uhaveid  = int(uhaveid),SID = SID,time=time,update_schedule= str(update_schedule))) #pass SID
         return render_template("schedule/schedule_create.html", user_equipments = user_equipments)
     else:
         return redirect(url_for("login_get"))
-# @app.route('/projects/project', methods=['POST'])
-# def project_post():
-#     hid = request.form.get('PID').strip()
-#     if "usr" in session:
-#         usr = session["usr"]
-#         session["usr"] = usr
-#         if request.form.get('button') == 'Detail':
-#             print(hid)
-#             project_target = get_project_target(int(hid))
-#             return render_template("projects/project_target.html", project_target = project_target)
-#     else:
-#         return redirect(url_for("login_get"))
 
 @app.route('/schedule/schedule_choose_project', methods=['GET'])
 def schedule_choose_project_get():
@@ -360,7 +369,14 @@ def schedule_choose_project_get():
         session["usr"] = usr
         join_list = get_project_join(usr)  # retrun the project which user joined
         project_list = get_project_join_filter(join_list,usr,int(request.args.get('uhaveid'))) #return the project satisify requirement 
-        return render_template("schedule/schedule_choose_project.html", project_list = project_list)
+        SID = request.args.get('SID')
+        time = request.args.get('time')
+        update_schedule = request.args.get('update_schedule').strip()
+        print("here")
+        print(update_schedule)
+        print(time)
+        print(SID)
+        return render_template("schedule/schedule_choose_project.html", project_list = project_list, uhaveid = int(request.args.get('uhaveid')),SID =SID, time = time,update_schedule = update_schedule)
     else:
         return redirect(url_for("login_get"))
 
@@ -370,49 +386,63 @@ def schedule_choose_project_post():
         usr = session["usr"]
         session["usr"] = usr
         if request.form.get('button') == 'Show':  #show the target observe time of this project
-            PID = request.form.get('PID').strip()
-            uhaveid = request.args.get('uhaveid')
-            return redirect(url_for("schedule_show_target_get", PID = int(PID), uhaveid = int(uhaveid))) #pass SID
+            #return redirect(url_for("schedule_choose_project_get()", uhaveid = int(uhaveid))) #pass SID
+            #target_list = fliter_project_target(usr,int(pid))
+            #target_oberve_time = get_observable_time(usr,int(uhaveid),target_list)
+            return redirect(url_for("schedule_show_target_post")) #pass SID
     else:
         return redirect(url_for("login_get"))
 
-@app.route('/schedule/schedule_show_target', methods=['GET'])
-def schedule_show_target_get():
-    if "usr" in session:
-        usr = session["usr"]
-        session["usr"] = usr
-        uhaveid = request.args.get('uhaveid')
-        pid = request.args.get('PID')
-        target_list = fliter_project_target(usr,int(pid))
-        target_oberve_time = get_observable_time(usr,int(uhaveid),target_list)
-        return render_template("schedule/schedule_show_target.html", target_observe_time = target_oberve_time)
-    else:
-        return redirect(url_for("login_get"))
+#@app.route('/schedule/schedule_show_target', methods=['GET'])
+#def schedule_show_target_get():
+#    if "usr" in session:
+#        usr = session["usr"]
+#        session["usr"] = usr
+#        uhaveid = request.form.get('uhaveid')
+#        pid = request.form.get('PID')
+#        target_list = fliter_project_target(usr,int(pid))
+#        target_oberve_time = get_observable_time(usr,int(uhaveid),target_list)
+#        return render_template("schedule/schedule_show_target.html", target_list = target_list, target_oberve_time = target_oberve_time)
+#    else:
+#        return redirect(url_for("login_get"))
 
 @app.route('/schedule/schedule_show_target', methods=['POST'])
 def schedule_show_target_post():
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
-        uhaveid = request.args.get('uhaveid')
-        pid = request.args.get('PID')
+        uhaveid = request.form.get('uhaveid')
+        update_schedule = request.form.get('update_schedule')
+        SID = request.form.get('SID')
+        time = request.form.get('time')
+        pid = request.form.get('PID')
+        print(SID)
+        print(time)
+        print(update_schedule)
         #sid = request.args.get('SID')
-        target_list = fliter_project_target(usr,int(pid))
-        target_oberve_time = get_observable_time(usr,int(uhaveid),target_list)
+        if request.form.get('button') == None : 
+            target_list = fliter_project_target(usr,int(pid))
+            target_oberve_time = get_observable_time(usr,int(uhaveid),target_list)
         # target list
         filename = 'schedule_tmp_'+str(uhaveid)
+        
         if os.path.exists(filename): #if there is existing schedule_tmp file, then read the current schedule
             tmp = open(filename,'r')
             schedule = tmp.read()
-            schedule = ast.literal_eval(p)
+            schedule = ast.literal_eval(schedule)
             tmp.close()
         else:
             schedule = None
+
         if request.form.get('button') == 'add':  # add a new target into the schedule
+            print("Entered the button")
             section = request.form.get('time_section').strip()
             name = request.form.get('name').strip()
             tid = request.form.get('TID').strip()
             section = ast.literal_eval(section)
+            print(section)
+            print(name)
+            print(tid)
             if os.path.exists(filename):
                 print('exist')
                 tmp = open(filename,'r')
@@ -447,17 +477,20 @@ def schedule_show_target_post():
                 tmp.write(str(tmp_list))
                 tmp.close()
         if request.form.get('button') == 'update': # update the target time section which already in target table 
+            section = request.form.get('time_section').strip()
+            name = request.form.get('name').strip()
+            tid = request.form.get('TID').strip()
             tmp = open(filename,'r')
             data = tmp.read()
             data = ast.literal_eval(data)
             tmp.close()
             tmp = open(filename,'w')
             for i in range(len(data)):
-                if data[i]['TID'] == TID:
+                if data[i]['TID'] == tid:
                     break
-            for i in range(0,24):
-                if section[i] == 1 : time_section[i] = int(tid)
-                if section[i] == 0 : time_section[i] = 0
+            for j in range(0,24):
+                if section[j] == 1 : data[j]['time_section'][i] = int(tid)
+                if section[j] == 0 : data[j]['time_section'][i] = 0
             tmp.write(str(data))
             tmp.close()
         #if request.form.get('button') == 'delete': # delete a target from current schedule
@@ -467,8 +500,11 @@ def schedule_show_target_post():
             data = ast.literal_eval(data)
             tmp.close()
             tmp_list = []
-            for i in range(len(data)):
-                tmp_list.append(data[i]['tmie_section'])
+            for j in range(0,24): 
+                for i in range(len(data)):
+                    if data[i]['time_section'][j] > 0:  #may go wrong   
+                        break;
+                tmp_list.append(data[i]['time_section'][j])
 
             # handle the error of conflict time section 
             #for i in range(0,24):
@@ -478,10 +514,13 @@ def schedule_show_target_post():
             #        if flag > 1 :
             #            return error_handle_page
 
-            now = datetime.now()
-            #save_schedule(sid,now,data) 
+            save_schedule(SID,time,data) 
             os.remove("schedule_tmp")
-        return render_template("schedule/schedule_show_target.html", target_observe_time = target_oberve_time, schedule = schedule)
+        if request.form.get('button') == None:
+            update_schedule = ast.literal_eval(update_schedule)
+            return jsonify(targetObservetime = target_oberve_time, schedule = update_schedule)
+        else:
+            return jsonify(schedule = schedule)
     else:
         return redirect(url_for("login_get"))
 

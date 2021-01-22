@@ -4,20 +4,25 @@
 
 <div class="main">
     <div class="form-wrapper">
-        <form method="POST">
-            <h2>Project</h2>
-            <input class="form-control" type="hidden" name='PID' >
-        </form>      
-            {% for info in projects %}
-                <h4>project {{loop.index}}</h4>
-                <form method="post">
-                    <input class="form-control" type="hidden" name='PID' value="{{info.PID}}">
-                    <input class="form-control" type="text" name="title" value="{{info.title}}" >
-                <div class="actions">
-                    <button name="button" type="submit" class="bt btn-info btn-sm" value="Choose">Join</button>
-                </div>
-                </form>
-                {% endfor%}
+        <h2>Choose project</h2>
+        <form method="post">
+            <input id = "uhaveid" class="form-control" type="hidden" name='uhaveid' value="{{uhaveid}}">
+            <input id = "SID" class="form-control" type="hidden" name='SID' value="{{SID}}">
+            <input id = "time" class="form-control" type="hidden" name='time' value="{{time}}">
+            <input id = "update_schedule" class="form-control" type="hidden" name='update_schedule' value="{{update_schedule}}">
+            <select id="ProjectList">
+                {% for info in project_list %}
+                <option name="PID" value="{{info.PID}}">{{info.title}}</option>
+                {%endfor%}
+            </select>
+            <div class="actions">
+                <button name="button" type="button" id="ShowTargetSchedulebtn" class="bt btn-info btn-sm "
+                    value="Show">Show target</button>
+            </div>
     </div>
+    </form>
+    <div id ='targetObserveDiv'></div>
+    <div id="scheduleResult"></div>
+</div>
 </div>
 {% endblock %}

@@ -4,9 +4,12 @@ from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 from services.classes import User, Target, Equipments, Project, Schedule
 from datetime import datetime, timedelta
 
-import astro.declination_limit_of_location as declination
-import astro.astroplan_calculations as schedule
-import astro.nighttime_calculations as night
+import services.declination_limit_of_location as declination
+import services.astroplan_calculations as schedule
+import services.nighttime_calculations as night
+#import astro.declination_limit_of_location as declination
+#import astro.astroplan_calculations as schedule
+#import astro.nighttime_calculations as night
 import ephem
 
 graph = db_auth()
@@ -688,7 +691,7 @@ def load_schedule(uhaveid: int):
     new_observe_section, current_time = get_night_time(uhaveid)
 
     # find the schedule
-    query_schedule = "MATCH (e:equipments{EID:$EID})-[r:EhaveS]->(s:schedule) return s.observe_section as observe_section s.last_update as last_update"
+    query_schedule = "MATCH (e:equipments{EID:$EID})-[r:EhaveS]->(s:schedule) return s.observe_section as observe_section, s.last_update as last_update"
     result = graph.run(query_schedule, EID=EID).data()
     old_observe_section = result[0]['observe_section']
     previous_time = result[0]['last_update']
@@ -723,7 +726,7 @@ def get_eid(uhaveid):
     query_eid = "MATCH (x:user)-[h:UhaveE{uhaveid:$uhaveid}]->(e:equipments) return e.EID as EID"
     eid = graph.run(query_eid, uhaveid=uhaveid).data()
 
-    eid = int(uhid[0]['EID'])
+    eid = int(eid[0]['EID'])
 
     return eid
 
@@ -746,12 +749,11 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
             index = 0
         else:
             index += 1
-    print(current_hour_array)
     
     # get information from uhavee and equipment table
     query_relation = "MATCH (x:user)-[h:UhaveE{uhaveid:$uhaveid}]->(e:equipments) return h.longitude as longitude, h.latitude as latitude, h.altitude as altitude, e.elevation_lim as elevation_lim"
     eq_info = graph.run(query_relation, uhaveid=uhaveid).data()
-
+    print(eq_info)
     longitude = float(eq_info[0]['longitude'])
     latitude = float(eq_info[0]['latitude'])
     altitude = float(eq_info[0]['altitude'])
@@ -763,6 +765,7 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
 
     target_data = []
     for i in range(len(tid_list)):
+        print(i)        
         # create observation array
         observe = [0]*24
 
@@ -786,8 +789,15 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
             # print('time left to start: ', time_left2start)
             # print('time_left to end:   ', time_left2end)
 
-            o1 = int(str(time_left2start).split(":")[0])
-            o2 = int(str(time_left2end).split(":")[0])+1
+            if len(str(time_left2start)) > 10:
+                o1 = 24
+            else:
+                o1 = int(str(time_left2start).split(":")[0])
+            if len(str(time_left2end)) > 10:
+                o2 = 24
+            else:
+                o2 = int(str(time_left2end).split(":")[0])+1
+
             for j in range(24):
                 if j >= o1-1 and j < o2:
                     observe[j] = 1
@@ -797,7 +807,6 @@ def get_observable_time(usr: str, uhaveid: int, tid_list: list):
         #     t_data = {'TID':tid_list[i]['TID'], 'name':name, 'start':str(t_start), 'end':str(t_end), 'time_section':observe, 'hour':current_hour_array}
 
             target_data.append(t_data)
-        # print(t_data)
 
     return target_data
 
