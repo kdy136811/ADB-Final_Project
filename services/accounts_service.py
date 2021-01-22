@@ -8,6 +8,7 @@ import astro.declination_limit_of_location as declination
 import astro.astroplan_calculations as schedule
 import astro.nighttime_calculations as night
 import ephem
+import random
 
 graph = db_auth()
 
@@ -95,6 +96,38 @@ def delete_friend(usr: str, f_UID: int):
 
     graph.run(query1, usr=usr, UID=f_UID)
     graph.run(query2, UID=f_UID, usr=usr)
+
+def check_is_friend(usr: str, f_UID: int):
+    query = "MATCH (x:user{email:$usr})-[r:Friend]->(f:user{UID:$UID}) RETURN count(r) as cnt"
+    count = graph.run(query, usr=usr, UID=f_UID).data()
+
+    if(count[0]['cnt']) == 0:
+        return 0
+    else:
+        return 1
+
+def get_a_new_user(usr: str, TID: int):
+    query = "MATCH (x:user)-[r:ULikeT]->(t:target{TID:$TID}) where x.email<>$usr RETURN x.UID as UID"
+    uid_list = graph.run(query, TID=TID, usr=usr).data()
+
+    random.shuffle(uid_list)
+    for uid in uid_list:
+        if check_is_friend(usr, uid['UID']) == 0:
+            return uid['UID']
+
+    return -1
+
+def count_user():
+    query = "match (x:user) return x.UID as max order by max DESC limit 1"
+    count = graph.run(query).data()
+
+    return int(count[0]['max'])
+
+def check_is_me(usr: str):
+    query = "match (x:user{email:$usr}) return x.UID as UID"
+    uid = graph.run(query, usr=usr).data()
+
+    return int(uid[0]['UID'])
 
 def count_user_equipment(usr: str)->int:
     count = graph.run("MATCH (x:user {email:$usr})-[:UhaveE]->(:equipments) return count(*)",usr=usr).evaluate()
@@ -782,6 +815,22 @@ def save_schedule(SID: int, last_update: str, observe_section: list):
     query_save_schedule = "match (s:schedule{SID:$SID}) set s.last_update=$last_update, s.observe_section=$observe_section"
 
     graph.run(query_save_schedule, SID=SID, last_update=last_update, observe_section=observe_section)
+
+def get_uid(usr: str):
+    query_uid = "MATCH (x:user{email:$usr}) return x.UID as UID"
+    uid = graph.run(query_uid, usr=usr).data()
+    uid = int(uid[0]['UID'])
+
+    return uid
+
+def get_user_info(uid_list: list):
+    query = "match (x:user{UID:$UID}) return x.UID as UID, x.username as username, x.name as name, x.email as email, x.affiliation as affiliation, x.title as title, x.country as country"
+    user_info = []
+    for i in range(len(uid_list)):
+        user = graph.run(query, UID=uid_list[i][0]).data()
+        user_info.append(user[0])
+
+    return user_info
 
 
 def get_eid(uhaveid):

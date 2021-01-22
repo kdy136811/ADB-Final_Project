@@ -2,7 +2,9 @@ from flask import Flask, render_template, redirect, session, url_for, flash, req
 from data.db_session import db_auth
 #from services.accounts_service import create_user, login_user, get_profile, update_profile
 from services.accounts_service import *
+from services.postgres_service import *
 import os
+import random
 
 app = Flask(__name__) #create application
 app.secret_key = os.urandom(24) 
@@ -79,15 +81,89 @@ def login_post():
     session["usr"] = usr
     return redirect(url_for("dashboard_get"))
 
+@app.route('/accounts/map.html', methods=['GET'])
+def map_get():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        return render_template("accounts/map.html")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/map.html', methods=['POST'])
+def map_post():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        return render_template("accounts/map.html")
+    else:
+        return redirect(url_for("login_get"))
+
+@app.route('/accounts/friends', methods=['GET'])
+def viewFriends():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        friends = view_friend(usr)
+        user_profile = get_profile(usr)
+        return render_template("accounts/friends.html", friends=friends, user_profile=user_profile )
+    else:
+        return redirect(url_for("login_get"))
+
 @app.route('/accounts/index', methods=['GET'])
 def dashboard_get():
-    # Make sure the user has an active session.  If not, redirect to the login page.
     if "usr" in session:
         usr = session["usr"]
         session["usr"] = usr
         user_profile = get_profile(usr)
         projects = get_project(usr)
-        return render_template("accounts/index.html", user_profile=user_profile, projects = projects)
+        # get recommended users from postgresSQL
+        uid_list1 = recommend_user_by_equipment(str(get_uid(usr)))
+        random.shuffle(uid_list1)
+        new_uid_list1 = []
+        L1 = []
+        for uid in uid_list1:
+            if check_is_friend(usr, uid[0]) == 0:
+                new_uid_list1.append(uid)
+        L1 = get_user_info(new_uid_list1)
+        L1 = L1[:3]
+
+        # get recommended users from the users share the same interest target
+        # 1. get user interested targets
+        targets = get_user_interest(usr)
+        random.shuffle(targets)
+        # 2. get a non-friend user from each target with max 6 users
+        uid_list2 = []
+        L2 = []
+        for t in targets:
+            uid = get_a_new_user(usr, int(t['TID']))
+            if uid != -1:
+                
+                uid_list2.append([uid])
+            if len(uid_list2) > 3:
+                break
+        print(uid_list2)
+        if len(uid_list2) != 0:
+            L2 = get_user_info(uid_list2)
+        if len(L2) > 3:
+            L2 = L2[:3]
+        # get recommended users from the users in the same project
+        # filter out the users that already is friend
+        recommended_user = L1+L2
+        uid_rest = []
+        if len(recommended_user) < 6:
+            need = 6-len(recommended_user)
+            for i in range(need):
+                while True:
+                    uid = random.randint(0, count_user())
+                    if uid != check_is_me(usr):
+                        break
+                uid_rest.append([uid])
+        L3 = get_user_info(uid_rest)
+        
+        recommended_user = L1+L2+L3
+
+        return render_template("accounts/index.html", user_profile=user_profile, projects=projects, recommended_user=recommended_user)
     else:
         return redirect(url_for("login_get"))
 
@@ -154,6 +230,17 @@ def getJoinedEquipmentInfo():
     hid = request.form.get('PID').strip()
     project_equipments = get_project_equipment(int(hid))
     return jsonify(project_equipments = project_equipments)
+
+@app.route('/addfriend', methods=['POST'])
+def addFriend():
+    if "usr" in session:
+        usr = session["usr"]
+        session["usr"] = usr
+        uid = request.form.get('UID').strip()
+        add_friend(usr, int(uid))
+        return jsonify(success = "success")
+    else:
+        return redirect(url_for("login_get"))
 
 @app.route('/getPMInfo', methods=['POST'])
 def getPMInfo():
@@ -292,14 +379,16 @@ def equipments_post():
             camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz,
             usr,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution,int(hid))
         if request.form.get('button') == 'add':
-
             equipments = create_equipments(aperture,Fov,pixel_scale,tracking_accuracy,lim_magnitude,elevation_lim,mount_type,camera_type1,camera_type2,JohnsonB,JohnsonR,JohnsonV,SDSSu,SDSSg,SDSSr,SDSSi,SDSSz)
             print(equipments.EID)
             user_equipments = create_user_equipments(usr,equipments.EID,Site,Longitude,Latitude,Altitude,tz,daylight,wv,light_pollution)
-            #print('add')
+            # create spatial user equipment
+            # postgres_create_user_equipments(int(user_equipments.id),get_uid(usr), equipments.EID,Longitude,Latitude,Altitude)
         if request.form.get('button') == 'delete':            
             hid = request.form.get('uhaveid').strip() 
             delete_user_equipment(usr,int(hid))
+            # delete user's equipment in postgresSQL
+            postgres_delete_user_equipments(int(hid))
         user_equipments = get_user_equipments(usr)
         return render_template("accounts/equipments.html", user_equipments = user_equipments)
     else:

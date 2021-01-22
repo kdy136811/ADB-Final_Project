@@ -803,3 +803,27 @@ $("#submitCreateProjectbtn").on("click", function(){
 });
 
 });
+
+$(".addFriend").on("click", function(){
+  console.log("entered");
+  console.log($(this).prev().prev().prev().val());
+  var uid = $(this).prev().prev().prev().val();
+
+  $.ajax({
+    url: '/addfriend',
+    type: "POST",
+    data: {
+        UID: uid
+    },
+    dataType: "json",
+    success: function (data) {
+      console.log(data);
+    },
+    error: function (error) {
+        console.log(error);
+    }
+  
+  });
+  
+
+});
